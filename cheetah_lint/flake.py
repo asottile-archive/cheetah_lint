@@ -276,7 +276,7 @@ def normalize_line_numbers(data, py_lines, cheetah_lines):
     )
 
 
-def get_flakes(file_contents):
+def get_from_flake8(file_contents):
     cheetah_lines = file_contents.splitlines(True)
     py_source = to_py(file_contents)
     py_lines = py_source.splitlines(True)
@@ -288,6 +288,48 @@ def get_flakes(file_contents):
         reporter.data,
     ))
     data = normalize_line_numbers(data, py_lines, cheetah_lines)
+    return data
+
+
+def check_implements(cheetah_by_line_no):
+    extends = None
+    implements = None
+    for line_no, line in enumerate(cheetah_by_line_no):
+        if line.startswith('#extends'):
+            extends = (line_no, line)
+        elif line.startswith('#implements'):
+            implements = (line_no, line)
+
+    if (
+            not extends and
+            implements and
+            implements[1].strip() == '#implements respond'
+    ):
+        return (
+            (
+                implements[0],
+                "T001 '#implements respond' is assumed without '#extends'"
+            ),
+        )
+    else:
+        return ()
+
+
+LINE_CHECKS = (check_implements,)
+
+
+def get_from_lines(file_contents):
+    cheetah_by_line_no = ('',) + tuple(file_contents.splitlines(True))
+    data = ()
+    for check in LINE_CHECKS:
+        data += check(cheetah_by_line_no)
+    return data
+
+
+def get_flakes(file_contents):
+    data = ()
+    data += get_from_flake8(file_contents)
+    data += get_from_lines(file_contents)
     return tuple(sorted(data))
 
 

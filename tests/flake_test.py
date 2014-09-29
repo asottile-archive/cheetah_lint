@@ -434,6 +434,20 @@ def test_cannot_determine_line_number():
     )
 
 
+def test_implements_respond_no_extend():
+    assert get_flakes('#implements respond') == (
+        (1, "T001 '#implements respond' is assumed without '#extends'"),
+    )
+
+
+def test_implements_respond_with_extend():
+    assert get_flakes('#extends foo\n#implements respond') == ()
+
+
+def test_implements_non_respond():
+    assert get_flakes('#implements foo') == ()
+
+
 def test_main_integration(tmpdir):
     good_file = tmpdir.join('good.tmpl')
     good_file.write('Hello world')
