@@ -21,8 +21,8 @@ setup(
         'aspy.refactor_imports>=0.2.1',
         'cached-property',
         'flake8',
-        'refactorlib[cheetah]',
-        'yelp-cheetah',
+        'refactorlib[cheetah]>=0.5.0',
+        'yelp-cheetah>=0.4.0',
     ],
     entry_points={
         'console_scripts': [

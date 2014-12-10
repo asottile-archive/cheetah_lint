@@ -424,13 +424,15 @@ def test_context_manager():
 
 def test_cannot_determine_line_number():
     assert get_flakes(
-        '#set foo = "bar"\n'
-        '#def foo()\n'
-        '   $herp\n'
-        '#end def\n'
+        '$foo(\n'
+        '    $bar == True,\n'
+        ')'
     ) == (
-        # The current reverse-parsing strategy doesn't find this assignment.
-        (0, "F841 local variable 'foo' is assigned to but never used"),
+        (
+            0,
+            "E712 comparison to True should be "
+            "'if cond is True:' or 'if cond:'"
+        ),
     )
 
 
