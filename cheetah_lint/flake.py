@@ -17,7 +17,7 @@ from refactorlib.cheetah.parse import AutoDict
 from cheetah_lint import five
 
 
-ACCEPTABLE_UNUSED_ASSIGNMENTS = ('_dummyTrans', '_filter', 'write')
+ACCEPTABLE_UNUSED_ASSIGNMENTS = ('_dummyTrans', '_filter', 'write', 'SL')
 UNUSED_ASSIGNMENTS_FLAKE8_MESSAGES = frozenset(
     "F841 local variable '{0}' is assigned to but never used".format(name)
     for name in ACCEPTABLE_UNUSED_ASSIGNMENTS
