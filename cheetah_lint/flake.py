@@ -315,7 +315,20 @@ def check_implements(cheetah_by_line_no):
         return ()
 
 
-LINE_CHECKS = (check_implements,)
+def check_extends_cheetah_template(cheetah_by_line_no):
+    for line_no, line in enumerate(cheetah_by_line_no):
+        if line.strip() == '#extends Cheetah.Template':
+            return (
+                (
+                    line_no,
+                    "T002 '#extends Cheetah.Template' "
+                    "is assumed without '#extends'",
+                ),
+            )
+    return ()
+
+
+LINE_CHECKS = (check_implements, check_extends_cheetah_template)
 
 
 def get_from_lines(file_contents):

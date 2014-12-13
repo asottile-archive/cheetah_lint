@@ -450,6 +450,17 @@ def test_implements_non_respond():
     assert get_flakes('#implements foo') == ()
 
 
+def test_extends_cheetah_template():
+    assert get_flakes('#extends Cheetah.Template') == (
+        (0, "F811 redefinition of unused 'Template' from line 0"),
+        (1, "T002 '#extends Cheetah.Template' is assumed without '#extends'"),
+    )
+
+
+def test_extends_something_else():
+    assert get_flakes('#extends foo') == ()
+
+
 def test_main_integration(tmpdir):
     good_file = tmpdir.join('good.tmpl')
     good_file.write('Hello world')
