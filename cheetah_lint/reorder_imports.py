@@ -96,7 +96,6 @@ def fix_whitespace_after_imports(xmldoc):
         # The document either contains no directives or has no body
         return xmldoc.totext(encoding='unicode')
 
-    assert following_whitespace_element.text.startswith('\n')
     following_whitespace_element.text = (
         '\n\n' + following_whitespace_element.text.lstrip('\n')
     )
