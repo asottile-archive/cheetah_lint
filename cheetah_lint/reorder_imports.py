@@ -100,7 +100,7 @@ def fix_whitespace_after_imports(xmldoc):
     following_whitespace_element.text = (
         '\n\n' + following_whitespace_element.text.lstrip('\n')
     )
-    return xmldoc.totext(encoding='unicode')
+    return xmldoc.totext(encoding='unicode').rstrip('\n') + '\n'
 
 
 def perform_step(file_contents, step):
