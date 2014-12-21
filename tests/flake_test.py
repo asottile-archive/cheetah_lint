@@ -99,14 +99,14 @@ def test_py_def_re_matches(input_str):
 
 
 def test_py_def_re_specific_matches():
-    match = PY_DEF_RE.match('    def foo(self, **KWS):\n')
+    match = PY_DEF_RE.match('    def foo(self):\n')
     assert match.group(1) == 'def foo('
     assert match.group(2) == ''
     assert match.group(3) == '):'
 
 
 def test_py_def_re_specific_matches_with_params():
-    match = PY_DEF_RE.match('    def foo(self, foo=bar, **KWS):\n')
+    match = PY_DEF_RE.match('    def foo(self, foo=bar):\n')
     assert match.group(1) == 'def foo('
     assert match.group(2) == 'foo=bar'
     assert match.group(3) == '):'
@@ -122,8 +122,8 @@ def test_py_def_re_specific_matches_with_kwargs():
 @pytest.mark.parametrize(
     ('input_str', 'expected'),
     (
-        ('    def foo(self, **KWS):\n', 'def foo():\n'),
-        ('    def foo(self, foo=bar, **KWS):\n', 'def foo(foo=bar):\n'),
+        ('    def foo(self):\n', 'def foo():\n'),
+        ('    def foo(self, foo=bar):\n', 'def foo(foo=bar):\n'),
         (
             '    def foo(self, foo=bar, **kwargs):\n',
             'def foo(foo=bar, **kwargs):\n',
@@ -452,7 +452,6 @@ def test_implements_non_respond():
 
 def test_extends_cheetah_template():
     assert get_flakes('#extends Cheetah.Template') == (
-        (0, "F811 redefinition of unused 'Template' from line 0"),
         (1, "T002 '#extends Cheetah.Template' is assumed without '#extends'"),
     )
 

@@ -137,8 +137,8 @@ PY_DEF_RE = re.compile(
     # group1: def foo(
     # group2: params
     # group3: ):
-    # Meanwhile ignoring `self`, `**KWS` which are added by cheetah
-    r'^\s+(def [A-Za-z0-9_]+\()self, (.*?)(?:(?:, )?\*\*KWS)?(\):)$'
+    # Meanwhile ignoring `self` which is added by cheetah
+    r'^\s+(def [A-Za-z0-9_]+\()self(?:, )?(.*?)(\):)$'
 )
 STRIP_SYMBOLS_RE = re.compile(r'[^A-Za-z0-9_]')
 NEED_LINE_NUMBER_NORMALIZED = frozenset(('F402', 'F811', 'F812'))
