@@ -1,6 +1,7 @@
 from setuptools import find_packages
 from setuptools import setup
 
+
 setup(
     name='cheetah_lint',
     description='Linting tools for the Cheetah templating language.',

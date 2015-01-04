@@ -5,8 +5,8 @@ from refactorlib.cheetah.parse import parse
 
 from cheetah_lint.directives import get_compiler_settings_directive
 from cheetah_lint.directives import get_extends_directive
-from cheetah_lint.directives import get_implements_directive
 from cheetah_lint.directives import get_from_imports
+from cheetah_lint.directives import get_implements_directive
 from cheetah_lint.directives import get_import_imports
 
 

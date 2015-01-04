@@ -1,4 +1,6 @@
 """five: six, redux"""
+
+
 PY2 = (str is bytes)
 PY3 = (str is not bytes)
 

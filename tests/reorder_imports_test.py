@@ -3,11 +3,12 @@ from __future__ import unicode_literals
 import io
 import os
 import os.path
+
 import pytest
 
-from cheetah_lint.reorder_imports import STEPS
 from cheetah_lint.reorder_imports import main
 from cheetah_lint.reorder_imports import perform_step
+from cheetah_lint.reorder_imports import STEPS
 
 
 INPUT_DIRECTORY = 'tests/inputs'

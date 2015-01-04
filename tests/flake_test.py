@@ -5,11 +5,11 @@ import pytest
 
 from cheetah_lint.flake import _find_bounds
 from cheetah_lint.flake import _get_line_no_from_comments
-from cheetah_lint.flake import get_flakes
 from cheetah_lint.flake import filter_known_unused_assignments
 from cheetah_lint.flake import filter_known_unused_imports
-from cheetah_lint.flake import LINECOL_COMMENT_RE
+from cheetah_lint.flake import get_flakes
 from cheetah_lint.flake import LINE_ERROR_MSG_RE
+from cheetah_lint.flake import LINECOL_COMMENT_RE
 from cheetah_lint.flake import main
 from cheetah_lint.flake import PY_DEF_RE
 from cheetah_lint.flake import STRIP_SYMBOLS_RE
