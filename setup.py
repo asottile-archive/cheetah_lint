@@ -23,7 +23,7 @@ setup(
         'cached-property',
         'flake8',
         'refactorlib[cheetah]>=0.6.0',
-        'yelp-cheetah>=0.6.0',
+        'yelp-cheetah>=0.6.0,<=0.6.999',
     ],
     entry_points={
         'console_scripts': [
