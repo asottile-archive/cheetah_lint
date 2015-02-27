@@ -9,27 +9,33 @@ from cheetah_lint.imports import CheetahFromImport
 from cheetah_lint.imports import CheetahImportImport
 
 
-def _get_special_directive(xmldoc, element):
+def get_compiler_settings_directive(xmldoc):
     try:
-        return xmldoc.xpath_one('//cheetah/Directive[{0}]'.format(element))
+        return xmldoc.xpath_one('./compiler-settings')
     except ExactlyOneError:
         return None
 
 
-get_compiler_settings_directive = functools.partial(
-    _get_special_directive, element='CompilerSettings',
-)
+def _get_special_directive(xmldoc, directive):
+    try:
+        return xmldoc.xpath_one(
+            './Directive[starts-with(., "{0}")]'.format(directive)
+        )
+    except ExactlyOneError:
+        return None
+
+
 get_extends_directive = functools.partial(
-    _get_special_directive, element='Extends',
+    _get_special_directive, directive='#extends',
 )
 get_implements_directive = functools.partial(
-    _get_special_directive, element='Implements',
+    _get_special_directive, directive='#implements',
 )
 
 
 def _get_import_helper(xmldoc, directive_cls):
     xml_elements = xmldoc.xpath(
-        '//cheetah/Directive['
+        './Directive['
         '    SimpleExprDirective/Expression/ExpressionParts/Py[1]['
         "        text() = '{0}'"
         '    ]'

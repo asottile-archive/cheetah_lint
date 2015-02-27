@@ -258,14 +258,6 @@ def test_indented_thrice_multiline():
     ) == ()
 
 
-def test_unknown_macros_with_compiler_settings():
-    assert get_flakes(
-        '#compiler-settings\n'
-        '#end compiler-settings\n'
-        '#inline_script: hai\n'
-    ) == ()
-
-
 def test_multiline_dictionary_literal():
     assert get_flakes(
         '#set foo = {\n'
@@ -470,3 +462,9 @@ def test_main_integration_fail(tmpdir):
     bad_file = tmpdir.join('bad.tmpl')
     bad_file.write('#import foo')
     assert main([bad_file.strpath]) == 1
+
+
+def test_compiler_settings():
+    assert get_flakes(
+        '#compiler-settings#useAutocalling=True#end compiler-settings#',
+    ) == ()

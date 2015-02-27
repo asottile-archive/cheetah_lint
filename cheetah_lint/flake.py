@@ -10,9 +10,7 @@ import sys
 import pep8
 from Cheetah.compile import compile_source
 from Cheetah.legacy_compiler import LegacyCompiler
-from Cheetah.legacy_parser import LegacyParser
 from flake8.engine import get_style_guide
-from refactorlib.cheetah.parse import AutoDict
 
 from cheetah_lint import five
 
@@ -65,27 +63,10 @@ SELECTED_ERRORS = set((
 ))
 
 
-class AllMacrosTrivialParser(LegacyParser):  # noqa  # pylint:disable=too-many-public-methods
-    """An instrumented parser which interprets any macro trivially."""
-
-    def __init__(self, *args, **kwargs):
-        super(AllMacrosTrivialParser, self).__init__(*args, **kwargs)
-        # Default unknown directives to macros
-        self._directiveNamesAndParsers = AutoDict(
-            lambda: self.eatMacroCall,
-            self._directiveNamesAndParsers,
-        )
-        # Default all macros to trivial
-        self._macros = AutoDict(lambda: lambda src: src)
-
-    def eatCompilerSettings(self):
-        # Don't want compiler-settings to affect output
-        self.advance(len('compiler-settings'))
-        self._eatToThisEndDirective('compiler-settings')
-
-
-class AllMacrosTrivialCompiler(LegacyCompiler):
-    parserClass = AllMacrosTrivialParser
+class NoCompilerSettingsCompiler(LegacyCompiler):
+    def add_compiler_settings(self):
+        # Consume the settings string, but do not assign it
+        self.clearStrConst()
 
 
 def to_py(src):
@@ -94,7 +75,7 @@ def to_py(src):
         # This turns off the usual $var -> VFFSL(SL, 'var', True, True)
         # so now we get $var -> var
         settings={'useNameMapper': False},
-        compiler_cls=AllMacrosTrivialCompiler,
+        compiler_cls=NoCompilerSettingsCompiler,
     )
 
 

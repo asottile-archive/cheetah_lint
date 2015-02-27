@@ -33,7 +33,7 @@ def test_integration_template(template):
     contents, expected = get_input_output(template)
     for step in STEPS:
         contents = perform_step(contents, step)
-    assert contents == expected
+    assert expected == contents
 
 
 @pytest.mark.parametrize('template', TESTS)
@@ -47,4 +47,4 @@ def test_integration_calls_main(tmpdir, template):
     main([template_path])
 
     end_contents = io.open(template_path).read()
-    assert end_contents == expected
+    assert expected == end_contents

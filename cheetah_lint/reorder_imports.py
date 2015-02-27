@@ -79,9 +79,9 @@ def fix_whitespace_after_imports(xmldoc):
         last_directive = xmldoc.xpath_one(
             """(
                 //cheetah/Directive[
-                    CompilerSettings or
-                    Extends or
-                    Implements or
+                    compiler-settings or
+                    starts-with(., "#extends") or
+                    starts-with(., "#implements") or
                     SimpleExprDirective/Expression/ExpressionParts/Py[1][
                         text() = 'from' or text() = 'import'
                     ]

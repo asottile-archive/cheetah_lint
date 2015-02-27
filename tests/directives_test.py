@@ -13,7 +13,7 @@ from cheetah_lint.directives import get_import_imports
 def get_parsed_doc():
     doc = (
         '#compiler-settings\n'
-        'useAutoCalling = True\n'
+        'useAutocalling = True\n'
         '#end compiler-settings\n'
         '#extends templates.base\n'
         '#implements respond\n'
@@ -30,7 +30,7 @@ def test_get_compiler_settings_directive():
     ret = get_compiler_settings_directive(get_parsed_doc())
     assert ret.totext(encoding='unicode') == (
         '#compiler-settings\n'
-        'useAutoCalling = True\n'
+        'useAutocalling = True\n'
         '#end compiler-settings\n'
     )
 
