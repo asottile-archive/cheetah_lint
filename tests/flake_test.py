@@ -16,7 +16,9 @@ from cheetah_lint.flake import STRIP_SYMBOLS_RE
 
 
 def test_filter_known_unused_imports_filters_known():
-    ret = filter_known_unused_imports(((1, "F401 'VFN' imported but unused"),))
+    ret = filter_known_unused_imports(
+        ((1, "F401 'VFFSL' imported but unused"),)
+    )
     assert ret == ()
 
 
@@ -27,7 +29,7 @@ def test_filter_known_unused_imports_ignores_unknown():
 
 def test_filter_known_unused_assignments_filters_known():
     ret = filter_known_unused_assignments((
-        (1, "F841 local variable '_filter' is assigned to but never used"),
+        (1, "F841 local variable '_dummyTrans' is assigned to but never used"),
     ))
     assert ret == ()
 
@@ -466,5 +468,5 @@ def test_main_integration_fail(tmpdir):
 
 def test_compiler_settings():
     assert get_flakes(
-        '#compiler-settings#useAutocalling=True#end compiler-settings#',
+        '#compiler-settings#useLegacyImportMode = True#end compiler-settings#',
     ) == ()
