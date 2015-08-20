@@ -15,14 +15,14 @@ from flake8.engine import get_style_guide
 from cheetah_lint import five
 
 
-ACCEPTABLE_UNUSED_ASSIGNMENTS = ('_dummyTrans', '_filter', 'write', 'SL')
+ACCEPTABLE_UNUSED_ASSIGNMENTS = ('_dummyTrans', 'NS')
 UNUSED_ASSIGNMENTS_FLAKE8_MESSAGES = frozenset(
     "F841 local variable '{0}' is assigned to but never used".format(name)
     for name in ACCEPTABLE_UNUSED_ASSIGNMENTS
 )
 
 
-ACCEPTABLE_UNUSED_IMPORTS = ('NotFound', 'Template', 'VFN', 'VFFSL', 'VFSL')
+ACCEPTABLE_UNUSED_IMPORTS = ('NotFound', 'Template', 'VFFSL')
 UNUSED_IMPORTS_FLAKE8_MESSAGES = frozenset(
     "F401 '{0}' imported but unused".format(name)
     for name in ACCEPTABLE_UNUSED_IMPORTS
