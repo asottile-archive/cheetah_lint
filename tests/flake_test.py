@@ -241,7 +241,7 @@ def test_multi_line_invocation():
 def test_other_multi_line_invocation():
     assert get_flakes(
         '$foo("bar"\n'
-        '     "baz"\n'
+        '    "baz"\n'
         ')'
     ) == ()
 
@@ -452,6 +452,26 @@ def test_extends_cheetah_template():
 
 def test_extends_something_else():
     assert get_flakes('#extends foo') == ()
+
+
+def test_indents_with_tabs():
+    assert get_flakes(
+        '#if True:\n'
+        '\tHello world\n'
+        '#end if\n',
+    ) == (
+        (2, 'T003 Indentation contains tabs'),
+    )
+
+
+def test_indents_not_four_spaces():
+    assert get_flakes(
+        '#if True:\n'
+        '   Hello world\n'
+        '#end if\n'
+    ) == (
+        (2, 'T004 Indentation is not a multiple of 4'),
+    )
 
 
 def test_main_integration(tmpdir):

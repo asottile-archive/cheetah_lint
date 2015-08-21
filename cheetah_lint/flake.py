@@ -309,7 +309,25 @@ def check_extends_cheetah_template(cheetah_by_line_no):
     return ()
 
 
-LINE_CHECKS = (check_implements, check_extends_cheetah_template)
+LEADING_WHITESPACE = re.compile('^[ \t]+')
+
+
+def check_indentation(cheetah_by_line_no):
+    errors = []
+    for line_no, line in enumerate(cheetah_by_line_no):
+        ws = getattr(LEADING_WHITESPACE.match(line), 'group', lambda: '')()
+        if '\t' in ws:
+            errors.append((line_no, 'T003 Indentation contains tabs'))
+        elif len(ws) % 4 != 0:
+            errors.append((line_no, 'T004 Indentation is not a multiple of 4'))
+    return tuple(errors)
+
+
+LINE_CHECKS = (
+    check_implements,
+    check_extends_cheetah_template,
+    check_indentation,
+)
 
 
 def get_from_lines(file_contents):
