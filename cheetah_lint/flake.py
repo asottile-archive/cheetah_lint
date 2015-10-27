@@ -323,10 +323,18 @@ def check_indentation(cheetah_by_line_no):
     return tuple(errors)
 
 
+def check_empty(cheetah_by_line_no):
+    if not ''.join(cheetah_by_line_no).strip():
+        return ((1, 'T005 File is empty'),)
+    else:
+        return ()
+
+
 LINE_CHECKS = (
     check_implements,
     check_extends_cheetah_template,
     check_indentation,
+    check_empty,
 )
 
 
