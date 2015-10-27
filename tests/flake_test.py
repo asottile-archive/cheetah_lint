@@ -215,7 +215,7 @@ def test_find_bounds_above_and_below(py_line):
 
 
 def test_get_flakes_trivial():
-    assert get_flakes('') == ()
+    assert get_flakes('') == ((1, 'T005 File is empty'),)
 
 
 def test_with_extends():
