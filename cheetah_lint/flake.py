@@ -257,18 +257,30 @@ def normalize_line_numbers(data, py_lines, cheetah_lines):
     )
 
 
-def get_from_flake8(file_contents):
-    cheetah_lines = file_contents.splitlines(True)
-    py_source = to_py(file_contents)
-    py_lines = py_source.splitlines(True)
+def check_flake8(py_lines):
     # Apologies, flake8 doesn't quite make this elegant / easy
     checker = get_style_guide(select=SELECTED_ERRORS)
     reporter = checker.init_report(DataCollectingReporter)
     checker.input_file('<compiled cheetah>', py_lines)
-    data = filter_known_unused_assignments(filter_known_unused_imports(
+    return filter_known_unused_assignments(filter_known_unused_imports(
         reporter.data,
     ))
-    data = normalize_line_numbers(data, py_lines, cheetah_lines)
+
+
+PY_CHECKS = (
+    check_flake8,
+)
+
+
+def get_from_py(file_contents):
+    data = ()
+    cheetah_lines = file_contents.splitlines(True)
+    py_source = to_py(file_contents)
+    py_lines = py_source.splitlines(True)
+    for check in PY_CHECKS:
+        data += normalize_line_numbers(
+            check(py_lines), py_lines, cheetah_lines,
+        )
     return data
 
 
@@ -348,7 +360,7 @@ def get_from_lines(file_contents):
 
 def get_flakes(file_contents):
     data = ()
-    data += get_from_flake8(file_contents)
+    data += get_from_py(file_contents)
     data += get_from_lines(file_contents)
     return tuple(sorted(data))
 
