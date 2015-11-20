@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
@@ -471,6 +472,18 @@ def test_indents_not_four_spaces():
         '#end if\n'
     ) == (
         (2, 'T004 Indentation is not a multiple of 4'),
+    )
+
+
+def test_unicode_literals():
+    assert get_flakes(
+        "$_(u'hi ☃')",
+    ) == (
+        (
+            1,
+            'P001 unicode literal prefix is unnecessary (assumed) in cheetah '
+            "templates: u'hi ☃'"
+        ),
     )
 
 
