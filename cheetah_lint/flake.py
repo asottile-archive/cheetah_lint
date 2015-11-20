@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
@@ -6,6 +7,7 @@ import argparse
 import io
 import re
 import sys
+import tokenize
 
 import pep8
 from Cheetah.compile import compile_source
@@ -257,18 +259,64 @@ def normalize_line_numbers(data, py_lines, cheetah_lines):
     )
 
 
-def get_from_flake8(file_contents):
-    cheetah_lines = file_contents.splitlines(True)
-    py_source = to_py(file_contents)
-    py_lines = py_source.splitlines(True)
+def check_flake8(py_lines):
     # Apologies, flake8 doesn't quite make this elegant / easy
     checker = get_style_guide(select=SELECTED_ERRORS)
     reporter = checker.init_report(DataCollectingReporter)
     checker.input_file('<compiled cheetah>', py_lines)
-    data = filter_known_unused_assignments(filter_known_unused_imports(
+    return filter_known_unused_assignments(filter_known_unused_imports(
         reporter.data,
     ))
-    data = normalize_line_numbers(data, py_lines, cheetah_lines)
+
+
+def to_readline(py_lines):
+    it = iter(py_lines)
+
+    def readline():
+        try:
+            return next(it)
+        except StopIteration:
+            return ''
+
+    return readline
+
+
+GETTEXT_LINE = 'def __CHEETAH_gettext_scannables():\n'
+
+
+def check_unicode_literals(py_lines):
+    data = ()
+
+    # The gettext scannables double the error messages
+    if GETTEXT_LINE in py_lines:
+        py_lines = py_lines[:py_lines.index(GETTEXT_LINE)]
+    readline = to_readline(py_lines)
+
+    for token_type, token_s, start, _, _ in tokenize.generate_tokens(readline):
+        if token_type == tokenize.STRING and token_s.startswith(('u', 'U')):
+            data += ((
+                start[0],
+                'P001 unicode literal prefix is unnecessary (assumed) in '
+                'cheetah templates: ' + token_s
+            ),)
+    return data
+
+
+PY_CHECKS = (
+    check_flake8,
+    check_unicode_literals,
+)
+
+
+def get_from_py(file_contents):
+    data = ()
+    cheetah_lines = file_contents.splitlines(True)
+    py_source = to_py(file_contents)
+    py_lines = py_source.splitlines(True)
+    for check in PY_CHECKS:
+        data += normalize_line_numbers(
+            check(py_lines), py_lines, cheetah_lines,
+        )
     return data
 
 
@@ -348,7 +396,7 @@ def get_from_lines(file_contents):
 
 def get_flakes(file_contents):
     data = ()
-    data += get_from_flake8(file_contents)
+    data += get_from_py(file_contents)
     data += get_from_lines(file_contents)
     return tuple(sorted(data))
 
@@ -357,7 +405,7 @@ def flake(filename):
     file_contents = io.open(filename).read()
     flakes = get_flakes(file_contents)
     for lineno, msg in flakes:
-        print('{0}:{1} {2}'.format(filename, lineno, msg))
+        print('{0}:{1} {2}'.format(filename, lineno, msg).encode('UTF-8'))
     return int(bool(flakes))
 
 
