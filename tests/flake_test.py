@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 import pytest
 
+from cheetah_lint import five
 from cheetah_lint.flake import _find_bounds
 from cheetah_lint.flake import _get_line_no_from_comments
 from cheetah_lint.flake import filter_known_unused_assignments
@@ -263,7 +264,7 @@ def test_indented_thrice_multiline():
 
 def test_multiline_dictionary_literal():
     assert get_flakes(
-        '#set foo = {\n'
+        '#py foo = {\n'
         '    "bar": "baz",\n'
         '}\n'
         '$foo\n'
@@ -273,7 +274,7 @@ def test_multiline_dictionary_literal():
 def test_indented_multiline_dictionary_literal():
     assert get_flakes(
         '#if True\n'
-        '    #set foo = {\n'
+        '    #py foo = {\n'
         '        "bar": "baz",\n'
         '    }\n'
         '    $foo\n'
@@ -285,7 +286,7 @@ def test_oneline_directive_followed_by_directive():
     assert get_flakes(
         '#if True\n'
         '    #def title()##end def#\n'
-        '    #set foo = "bar"\n'
+        '    #py foo = "bar"\n'
         '    $foo\n'
         '#end if\n'
     ) == ()
@@ -349,18 +350,22 @@ def test_redefinition_of_unused_name_block_def():
 
 
 def test_list_comprehension_redefines_name():
+    # python 3 makes this not an issue
+    expected = (
+        ((1, "F841 local variable 'foo' is assigned to but never used"),)
+        if five.PY3 else
+        ((2, "F812 list comprehension redefines 'foo' from line 1"),)
+    )
     assert get_flakes(
-        '#set foo = $bar\n'
+        '#py foo = $bar\n'
         '#for bar in [foo for foo in (1, 2, 3)]\n'
         '    $bar\n'
         '#end for\n'
-    ) == (
-        (2, "F812 list comprehension redefines 'foo' from line 1"),
-    )
+    ) == expected
 
 
 def test_unused_local_variable():
-    assert get_flakes('#set foo = $bar') == (
+    assert get_flakes('#py foo = $bar') == (
         (1, "F841 local variable 'foo' is assigned to but never used"),
     )
 

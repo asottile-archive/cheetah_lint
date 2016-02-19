@@ -7,7 +7,7 @@ setup(
     name='cheetah_lint',
     description='Linting tools for the Cheetah templating language.',
     url='https://github.com/asottile/cheetah_lint',
-    version='0.1.1',
+    version='0.2.0',
     author='Anthony Sottile',
     author_email='asottile@umich.edu',
     classifiers=[
@@ -15,6 +15,8 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: Implementation :: CPython',
     ],
     packages=find_packages('.', exclude=('tests*', 'testing*')),
@@ -23,8 +25,8 @@ setup(
         'aspy.refactor_imports>=0.2.1',
         'cached-property',
         'flake8',
-        'refactorlib[cheetah]>=0.9.0,<=0.9.999',
-        'yelp-cheetah>=0.12.1,<=0.12.999',
+        'refactorlib[cheetah]>=0.10.0,<=0.10.999',
+        'yelp-cheetah>=0.13.0,<=0.13.999',
     ],
     entry_points={
         'console_scripts': [

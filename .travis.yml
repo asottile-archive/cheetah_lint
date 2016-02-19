@@ -2,8 +2,13 @@ language: python
 env: # These should match the tox env list
     - TOXENV=py26
     - TOXENV=py27
-install: pip install coveralls tox --use-mirrors
+    - TOXENV=py34
+install: pip install coveralls tox
 script: tox
 after_success:
     - coveralls
 sudo: false
+cache:
+    directories:
+        - $HOME/.cache/pip
+        - $HOME/.pre-commit
