@@ -4,7 +4,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import argparse
-import io
 import re
 import sys
 import tokenize
@@ -15,6 +14,7 @@ from Cheetah.legacy_compiler import LegacyCompiler
 from flake8.engine import get_style_guide
 
 from cheetah_lint import five
+from cheetah_lint.util import read_file
 
 
 ACCEPTABLE_UNUSED_ASSIGNMENTS = ('_dummyTrans', 'NS')
@@ -22,7 +22,6 @@ UNUSED_ASSIGNMENTS_FLAKE8_MESSAGES = frozenset(
     "F841 local variable '{0}' is assigned to but never used".format(name)
     for name in ACCEPTABLE_UNUSED_ASSIGNMENTS
 )
-
 
 ACCEPTABLE_UNUSED_IMPORTS = ('NotFound', 'Template', 'VFFSL')
 UNUSED_IMPORTS_FLAKE8_MESSAGES = frozenset(
@@ -402,10 +401,10 @@ def get_flakes(file_contents):
 
 
 def flake(filename):
-    file_contents = io.open(filename).read()
+    file_contents = read_file(filename)
     flakes = get_flakes(file_contents)
     for lineno, msg in flakes:
-        print('{0}:{1} {2}'.format(filename, lineno, msg).encode('UTF-8'))
+        print(five.n('{0}:{1} {2}'.format(filename, lineno, msg)))
     return int(bool(flakes))
 
 

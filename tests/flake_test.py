@@ -498,10 +498,12 @@ def test_main_integration(tmpdir):
     assert main([good_file.strpath]) == 0
 
 
-def test_main_integration_fail(tmpdir):
+def test_main_integration_fail(tmpdir, capsys):
     bad_file = tmpdir.join('bad.tmpl')
     bad_file.write('#import foo')
     assert main([bad_file.strpath]) == 1
+    out, _ = capsys.readouterr()
+    assert out == bad_file.strpath + ":1 F401 'foo' imported but unused\n"
 
 
 def test_compiler_settings():

@@ -10,6 +10,7 @@ import pytest
 from cheetah_lint.reorder_imports import main
 from cheetah_lint.reorder_imports import perform_step
 from cheetah_lint.reorder_imports import STEPS
+from cheetah_lint.util import read_file
 
 
 INPUT_DIRECTORY = 'tests/inputs'
@@ -24,7 +25,7 @@ TESTS = tuple(
 
 def get_input_output(template):
     return tuple(
-        io.open(os.path.join(base, template)).read()
+        read_file(os.path.join(base, template))
         for base in (INPUT_DIRECTORY, OUTPUT_DIRECTORY)
     )
 
@@ -47,5 +48,5 @@ def test_integration_calls_main(tmpdir, template):
 
     main([template_path])
 
-    end_contents = io.open(template_path).read()
+    end_contents = read_file(template_path)
     assert expected == end_contents

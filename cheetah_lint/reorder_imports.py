@@ -17,6 +17,7 @@ from cheetah_lint.directives import get_compiler_settings_directive
 from cheetah_lint.directives import get_extends_directive
 from cheetah_lint.directives import get_implements_directive
 from cheetah_lint.imports import combine_import_objs
+from cheetah_lint.util import read_file
 
 
 def separate_comma_imports(xmldoc):
@@ -46,7 +47,8 @@ def apply_import_ordering(xmldoc):
     extends = get_extends_directive(xmldoc)
     implements = get_implements_directive(xmldoc)
     initial_block = [
-        obj for obj in [compiler_settings, extends, implements] if obj
+        obj for obj in [compiler_settings, extends, implements]
+        if obj is not None
     ]
 
     cheetah_imports = get_all_imports(xmldoc)
@@ -133,7 +135,7 @@ def main(argv=None):
 
     retv = 0
     for filename in args.filenames:
-        original_contents = file_contents = io.open(filename).read()
+        original_contents = file_contents = read_file(filename)
 
         for step in STEPS:
             file_contents = perform_step(file_contents, step)
