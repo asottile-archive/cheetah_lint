@@ -5,10 +5,15 @@ from cheetah_lint import five
 
 
 @pytest.yield_fixture(autouse=True)
-def no_lxml_warnings(recwarn):
+def no_warnings(recwarn):
     yield
-    for warning in recwarn:
-        assert five.text(warning.message) != (
-            'The behavior of this method will change in future versions. '
-            "Use specific 'len(elem)' or 'elem is not None' test instead."
+    assert len(tuple(
+        warning for warning in recwarn
+        # cheetah raises this warning when compiling a trivial file
+        if not (
+            isinstance(warning.message, UserWarning) and
+            five.text(warning.message) == (
+                'You supplied an empty string for the source!'
+            )
         )
+    )) == 0
