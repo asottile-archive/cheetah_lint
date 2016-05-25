@@ -20,7 +20,7 @@ def get_compiler_settings_directive(xmldoc):
 def _get_special_directive(xmldoc, directive):
     try:
         return xmldoc.xpath_one(
-            './Directive[starts-with(., "{0}")]'.format(directive)
+            './Directive[starts-with(., "{}")]'.format(directive)
         )
     except ExactlyOneError:
         return None
@@ -38,7 +38,7 @@ def _get_import_helper(xmldoc, directive_cls):
     xml_elements = xmldoc.xpath(
         './Directive['
         '    SimpleExprDirective/Expression/ExpressionParts/Py[1]['
-        "        text() = '{0}'"
+        "        text() = '{}'"
         '    ]'
         ']'.format(
             directive_cls.IMPORT_NAME,

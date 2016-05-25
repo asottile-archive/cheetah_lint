@@ -142,7 +142,7 @@ def main(argv=None):
 
         if file_contents != original_contents:
             retv = 1
-            print('Reordered imports in {0}'.format(filename))
+            print('Reordered imports in {}'.format(filename))
             with io.open(filename, 'w') as file_obj:
                 file_obj.write(file_contents)
 

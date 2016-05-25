@@ -163,7 +163,7 @@ def test_get_line_no_from_comments(line, expected):
 
 
 CHEETAH_BY_LINE_NO = ('',) + tuple(
-    '## line {0}'.format(i) for i in range(1, 9)
+    '## line {}'.format(i) for i in range(1, 9)
 )
 
 

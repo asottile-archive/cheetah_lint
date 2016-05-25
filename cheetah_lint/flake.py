@@ -19,13 +19,13 @@ from cheetah_lint.util import read_file
 
 ACCEPTABLE_UNUSED_ASSIGNMENTS = ('_dummyTrans', 'NS')
 UNUSED_ASSIGNMENTS_FLAKE8_MESSAGES = frozenset(
-    "F841 local variable '{0}' is assigned to but never used".format(name)
+    "F841 local variable '{}' is assigned to but never used".format(name)
     for name in ACCEPTABLE_UNUSED_ASSIGNMENTS
 )
 
 ACCEPTABLE_UNUSED_IMPORTS = ('NotFound', 'Template', 'VFFSL')
 UNUSED_IMPORTS_FLAKE8_MESSAGES = frozenset(
-    "F401 '{0}' imported but unused".format(name)
+    "F401 '{}' imported but unused".format(name)
     for name in ACCEPTABLE_UNUSED_IMPORTS
 )
 
@@ -36,7 +36,7 @@ UNUSED_IMPORTS_FLAKE8_MESSAGES = frozenset(
 # - undefined name 'name' - Variables referenced from the searchlist appear as
 #   undefined variables when linting.
 # Because of this, we select the errors we know to be actual problems
-SELECTED_ERRORS = set((
+SELECTED_ERRORS = frozenset({
     # 'module' imported but unused
     'F401',
     # import 'module' from line N shadowed by loop variable
@@ -61,7 +61,7 @@ SELECTED_ERRORS = set((
     'E901',
     # .has_key() is deprecated, use 'in'
     'W601',
-))
+})
 
 
 class NoCompilerSettingsCompiler(LegacyCompiler):
@@ -123,8 +123,8 @@ PY_DEF_RE = re.compile(
     r'^\s+(def [A-Za-z0-9_]+\()self(?:, )?(.*?)(\):)$'
 )
 STRIP_SYMBOLS_RE = re.compile(r'[^A-Za-z0-9_]')
-NEED_LINE_NUMBER_NORMALIZED = frozenset(('F402', 'F811', 'F812'))
-IMPORT_TYPE_CODES = frozenset(('F401', 'F403', 'F811'))
+NEED_LINE_NUMBER_NORMALIZED = frozenset({'F402', 'F811', 'F812'})
+IMPORT_TYPE_CODES = frozenset({'F401', 'F403', 'F811'})
 
 
 class LineNoHint(object):
@@ -237,7 +237,7 @@ def _normalize_msg_line_no(msg, py_by_line_no, cheetah_by_line_no):
     new_line = five.text(_get_line_no(
         line_no, py_by_line_no, cheetah_by_line_no, LineNoHint.FIRST_IMPORT,
     ))
-    return LINE_ERROR_MSG_RE.sub(r'\g<1>{0}'.format(new_line), msg)
+    return LINE_ERROR_MSG_RE.sub(r'\g<1>{}'.format(new_line), msg)
 
 
 def _normalize_line_number(line_no, msg, py_by_line_no, cheetah_by_line_no):
@@ -404,7 +404,7 @@ def flake(filename):
     file_contents = read_file(filename)
     flakes = get_flakes(file_contents)
     for lineno, msg in flakes:
-        print(five.n('{0}:{1} {2}'.format(filename, lineno, msg)))
+        print(five.n('{}:{} {}'.format(filename, lineno, msg)))
     return int(bool(flakes))
 
 
