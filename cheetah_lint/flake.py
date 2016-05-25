@@ -404,7 +404,7 @@ def flake(filename):
     file_contents = read_file(filename)
     flakes = get_flakes(file_contents)
     for lineno, msg in flakes:
-        print(five.n('{}:{} {}'.format(filename, lineno, msg)))
+        print('{}:{} {}'.format(filename, lineno, msg))
     return int(bool(flakes))
 
 
