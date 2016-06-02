@@ -23,7 +23,7 @@ UNUSED_ASSIGNMENTS_FLAKE8_MESSAGES = frozenset(
     for name in ACCEPTABLE_UNUSED_ASSIGNMENTS
 )
 
-ACCEPTABLE_UNUSED_IMPORTS = ('NotFound', 'Template', 'VFFSL')
+ACCEPTABLE_UNUSED_IMPORTS = ('NotFound', 'Template', 'VFFNS', 'VFFSL')
 UNUSED_IMPORTS_FLAKE8_MESSAGES = frozenset(
     "F401 '{}' imported but unused".format(name)
     for name in ACCEPTABLE_UNUSED_IMPORTS
