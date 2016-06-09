@@ -86,7 +86,7 @@ def fix_whitespace_after_imports(xmldoc):
                     self::Directive and (
                         starts-with(., "#extends") or
                         starts-with(., "#implements") or
-                        SimpleExprDirective/Expression/ExpressionParts/Py[1][
+                        SimpleExprDirective/UnbracedExpression/Py[1][
                             text() = 'from' or text() = 'import'
                         ]
                     )

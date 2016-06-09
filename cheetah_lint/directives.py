@@ -37,7 +37,7 @@ get_implements_directive = functools.partial(
 def _get_import_helper(xmldoc, directive_cls):
     xml_elements = xmldoc.xpath(
         './Directive['
-        '    SimpleExprDirective/Expression/ExpressionParts/Py[1]['
+        '    SimpleExprDirective/UnbracedExpression/Py[1]['
         "        text() = '{}'"
         '    ]'
         ']'.format(

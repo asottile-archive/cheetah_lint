@@ -22,7 +22,7 @@ class CheetahImport(object):
     @cached_property
     def import_obj(self):
         expr = self.directive_element.xpath_one(
-            'descendant::Expression',
+            'descendant::UnbracedExpression',
         ).totext(encoding='unicode')
         return self.IMPORT_TYPE.from_str(expr)
 

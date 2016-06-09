@@ -280,15 +280,8 @@ def to_readline(py_lines):
     return readline
 
 
-GETTEXT_LINE = 'def __CHEETAH_gettext_scannables():\n'
-
-
 def check_unicode_literals(py_lines):
     data = ()
-
-    # The gettext scannables double the error messages
-    if GETTEXT_LINE in py_lines:
-        py_lines = py_lines[:py_lines.index(GETTEXT_LINE)]
     readline = to_readline(py_lines)
 
     for token_type, token_s, start, _, _ in tokenize.generate_tokens(readline):
