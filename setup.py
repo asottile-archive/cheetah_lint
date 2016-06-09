@@ -7,7 +7,7 @@ setup(
     name='cheetah_lint',
     description='Linting tools for the Cheetah templating language.',
     url='https://github.com/asottile/cheetah_lint',
-    version='0.2.1',
+    version='0.2.2',
     author='Anthony Sottile',
     author_email='asottile@umich.edu',
     classifiers=[
