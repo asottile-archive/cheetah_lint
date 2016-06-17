@@ -22,7 +22,7 @@ setup(
     install_requires=[
         'aspy.refactor_imports>=0.2.1',
         'cached-property',
-        'flake8',
+        'flake8>=2.6.0',
         'refactorlib[cheetah]>=0.12.0,<=0.12.999',
         'yelp-cheetah>=0.16.1,<=0.16.999',
     ],

@@ -18,9 +18,14 @@ from cheetah_lint.flake import STRIP_SYMBOLS_RE
 
 
 def test_filter_known_unused_imports_filters_known():
-    ret = filter_known_unused_imports(
-        ((1, "F401 'VFFSL' imported but unused"),)
-    )
+    ret = filter_known_unused_imports((
+        (
+            1,
+            'F401 '
+            "'Cheetah.NameMapper.value_from_frame_or_search_list as VFFSL'"
+            ' imported but unused',
+        ),
+    ))
     assert ret == ()
 
 
@@ -324,6 +329,7 @@ def test_module_shadowed_by_loop_variable():
 
 def test_star_import():
     assert get_flakes('#from foo import *') == (
+        (1, "F401 'foo.*' imported but unused"),
         (1, "F403 'from foo import *' used; unable to detect undefined names"),
     )
 

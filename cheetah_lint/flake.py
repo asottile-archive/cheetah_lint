@@ -8,7 +8,7 @@ import re
 import sys
 import tokenize
 
-import pep8
+import pycodestyle
 from Cheetah.compile import compile_source
 from Cheetah.legacy_compiler import LegacyCompiler
 from flake8.engine import get_style_guide
@@ -23,7 +23,11 @@ UNUSED_ASSIGNMENTS_FLAKE8_MESSAGES = frozenset(
     for name in ACCEPTABLE_UNUSED_ASSIGNMENTS
 )
 
-ACCEPTABLE_UNUSED_IMPORTS = ('NotFound', 'Template', 'VFFNS', 'VFFSL')
+ACCEPTABLE_UNUSED_IMPORTS = (
+    'Cheetah.NameMapper.NotFound',
+    'Cheetah.NameMapper.value_from_frame_or_search_list as VFFSL',
+    'Cheetah.NameMapper.value_from_frame_or_namespace as VFFNS',
+)
 UNUSED_IMPORTS_FLAKE8_MESSAGES = frozenset(
     "F401 '{}' imported but unused".format(name)
     for name in ACCEPTABLE_UNUSED_IMPORTS
@@ -80,8 +84,8 @@ def to_py(src):
     )
 
 
-class DataCollectingReporter(pep8.BaseReport):
-    """A Reporter for pep8/flake8 which simply collects data instead of
+class DataCollectingReporter(pycodestyle.BaseReport):
+    """A Reporter for pycodestyle/flake8 which simply collects data instead of
     spewing to stdout.
     """
 
@@ -90,7 +94,7 @@ class DataCollectingReporter(pep8.BaseReport):
         self.data = []
 
     def error(self, line_number, offset, text, check):
-        # XXX: Restore ignoring behaviour from baseclass (copied from pep8)
+        # XXX: Restore behaviour from baseclass (copied from pycodestyle)
         if self._ignore_code(text[:4]):
             return
         self.data.append((line_number, text))
