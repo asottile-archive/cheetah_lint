@@ -24,7 +24,6 @@ UNUSED_ASSIGNMENTS_FLAKE8_MESSAGES = frozenset(
 )
 
 ACCEPTABLE_UNUSED_IMPORTS = (
-    'Cheetah.NameMapper.NotFound',
     'Cheetah.NameMapper.value_from_frame_or_search_list as VFFSL',
     'Cheetah.NameMapper.value_from_frame_or_namespace as VFFNS',
 )
