@@ -24,8 +24,7 @@ UNUSED_ASSIGNMENTS_FLAKE8_MESSAGES = frozenset(
 )
 
 ACCEPTABLE_UNUSED_IMPORTS = (
-    'Cheetah.NameMapper.value_from_frame_or_search_list as VFFSL',
-    'Cheetah.NameMapper.value_from_frame_or_namespace as VFFNS',
+    'Cheetah.NameMapper.value_from_namespace as VFNS',
 )
 UNUSED_IMPORTS_FLAKE8_MESSAGES = frozenset(
     "F401 '{}' imported but unused".format(name)
@@ -74,13 +73,7 @@ class NoCompilerSettingsCompiler(LegacyCompiler):
 
 
 def to_py(src):
-    return compile_source(
-        src,
-        # This turns off the usual $var -> VFFSL(SL, 'var', True, True)
-        # so now we get $var -> var
-        settings={'useNameMapper': False},
-        compiler_cls=NoCompilerSettingsCompiler,
-    )
+    return compile_source(src, compiler_cls=NoCompilerSettingsCompiler)
 
 
 class DataCollectingReporter(pycodestyle.BaseReport):

@@ -7,7 +7,7 @@ from cheetah_lint import five
 @pytest.yield_fixture(autouse=True)
 def no_warnings(recwarn):
     yield
-    assert len(tuple(
+    ret = len(tuple(
         warning for warning in recwarn
         # cheetah raises this warning when compiling a trivial file
         if not (
@@ -16,4 +16,5 @@ def no_warnings(recwarn):
                 'You supplied an empty string for the source!'
             )
         )
-    )) == 0
+    ))
+    assert ret == 0

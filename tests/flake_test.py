@@ -22,8 +22,8 @@ def test_filter_known_unused_imports_filters_known():
         (
             1,
             'F401 '
-            "'Cheetah.NameMapper.value_from_frame_or_search_list as VFFSL'"
-            ' imported but unused',
+            "'Cheetah.NameMapper.value_from_namespace as VFNS' imported but "
+            'unused',
         ),
     ))
     assert ret == ()
@@ -393,14 +393,14 @@ def test_comparison_to_true():
 
 
 def test_membership():
-    assert get_flakes('#if not $baz in $foo: herp') == (
-        (1, "E713 test for membership should be 'not in'"),
+    assert get_flakes('#py baz = foo = None\n#if not $baz in $foo: herp') == (
+        (2, "E713 test for membership should be 'not in'"),
     )
 
 
 def test_identity():
-    assert get_flakes('#if not $bar is $foo: herp') == (
-        (1, "E714 test for object identity should be 'is not'"),
+    assert get_flakes('#py bar = foo = None\n#if not $bar is $foo: herp') == (
+        (2, "E714 test for object identity should be 'is not'"),
     )
 
 
