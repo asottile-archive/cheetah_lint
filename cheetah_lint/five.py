@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# pylint:disable=undefined-variable
 """five: six, redux"""
 
 PY2 = (str is bytes)
