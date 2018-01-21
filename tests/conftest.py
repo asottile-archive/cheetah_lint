@@ -4,7 +4,7 @@ import pytest
 from cheetah_lint import five
 
 
-@pytest.yield_fixture(autouse=True)
+@pytest.fixture(autouse=True)
 def no_warnings(recwarn):
     yield
     ret = len(tuple(
