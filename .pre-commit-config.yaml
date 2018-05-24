@@ -7,7 +7,6 @@ repos:
         exclude: tests/(inputs|outputs)
     -   id: autopep8-wrapper
     -   id: check-docstring-first
-    -   id: check-json
     -   id: check-yaml
     -   id: debug-statements
     -   id: fix-encoding-pragma
