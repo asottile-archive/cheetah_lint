@@ -6,7 +6,7 @@ PY3 = (str is not bytes)
 
 # provide a symettrical `text` type to `bytes`
 if PY2:  # pragma: no cover
-    text = unicode  # flake8: noqa
+    text = unicode  # noqa
 
     def n(s):
         if isinstance(s, bytes):
