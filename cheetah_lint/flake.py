@@ -5,13 +5,13 @@ from __future__ import unicode_literals
 
 import argparse
 import re
+import subprocess
 import sys
+import tempfile
 import tokenize
 
-import pycodestyle
 from Cheetah.compile import compile_source
 from Cheetah.legacy_compiler import LegacyCompiler
-from flake8.engine import get_style_guide
 
 from cheetah_lint import five
 from cheetah_lint.util import read_file
@@ -19,7 +19,7 @@ from cheetah_lint.util import read_file
 
 ACCEPTABLE_UNUSED_ASSIGNMENTS = ('_dummyTrans', 'NS')
 UNUSED_ASSIGNMENTS_FLAKE8_MESSAGES = frozenset(
-    "F841 local variable '{}' is assigned to but never used".format(name)
+    "local variable '{}' is assigned to but never used".format(name)
     for name in ACCEPTABLE_UNUSED_ASSIGNMENTS
 )
 
@@ -27,7 +27,7 @@ ACCEPTABLE_UNUSED_IMPORTS = (
     'Cheetah.NameMapper.value_from_namespace as VFNS',
 )
 UNUSED_IMPORTS_FLAKE8_MESSAGES = frozenset(
-    "F401 '{}' imported but unused".format(name)
+    "'{}' imported but unused".format(name)
     for name in ACCEPTABLE_UNUSED_IMPORTS
 )
 
@@ -38,16 +38,20 @@ UNUSED_IMPORTS_FLAKE8_MESSAGES = frozenset(
 # - undefined name 'name' - Variables referenced from the searchlist appear as
 #   undefined variables when linting.
 # Because of this, we select the errors we know to be actual problems
-SELECTED_ERRORS = frozenset({
+SELECTED_ERRORS = ','.join((
     # 'module' imported but unused
     'F401',
     # import 'module' from line N shadowed by loop variable
     'F402',
     # 'from module import *' used; unable to detect undefined names
     'F403',
+    # dictionary key repeated with different values
+    'F601', 'F602',
+    # Use == / != to compare to literals
+    'F632',
     # redefinition of unused 'name' from line N
     'F811',
-    # list comprehension redefineds 'name' from line N
+    # list comprehension redefines 'name' from line N
     'F812',
     # local variable 'name' is assigned to but never used
     'F841',
@@ -60,10 +64,12 @@ SELECTED_ERRORS = frozenset({
     # test for object identity should be 'is not'
     'E714',
     # SyntaxError
-    'E901',
+    'E999',
     # .has_key() is deprecated, use 'in'
     'W601',
-})
+    # invalid escape sequence
+    'W605',
+))
 
 
 class NoCompilerSettingsCompiler(LegacyCompiler):
@@ -76,35 +82,12 @@ def to_py(src):
     return compile_source(src, compiler_cls=NoCompilerSettingsCompiler)
 
 
-class DataCollectingReporter(pycodestyle.BaseReport):
-    """A Reporter for pycodestyle/flake8 which simply collects data instead of
-    spewing to stdout.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(DataCollectingReporter, self).__init__(*args, **kwargs)
-        self.data = []
-
-    def error(self, line_number, offset, text, check):
-        # XXX: Restore behaviour from baseclass (copied from pycodestyle)
-        if self._ignore_code(text[:4]):
-            return
-        self.data.append((line_number, text))
-
-
-def filter_known_unused_assignments(data):
+def filter_known_errors(data):
     return tuple(
-        (line, msg)
-        for line, msg in data
-        if msg not in UNUSED_ASSIGNMENTS_FLAKE8_MESSAGES
-    )
-
-
-def filter_known_unused_imports(data):
-    return tuple(
-        (line, msg)
-        for line, msg in data
-        if msg not in UNUSED_IMPORTS_FLAKE8_MESSAGES
+        (line, code, msg)
+        for line, code, msg in data
+        if not (code == 'F841' and msg in UNUSED_ASSIGNMENTS_FLAKE8_MESSAGES)
+        if not (code == 'F401' and msg in UNUSED_IMPORTS_FLAKE8_MESSAGES)
     )
 
 
@@ -224,8 +207,7 @@ def _get_line_no(py_line_no, py_by_line_no, cheetah_by_line_no, hint=None):
     return 0
 
 
-def _normalize_msg_line_no(msg, py_by_line_no, cheetah_by_line_no):
-    code = msg[:4]
+def _normalize_msg_line_no(msg, code, py_by_line_no, cheetah_by_line_no):
     if code not in NEED_LINE_NUMBER_NORMALIZED:
         return msg
 
@@ -236,32 +218,39 @@ def _normalize_msg_line_no(msg, py_by_line_no, cheetah_by_line_no):
     return LINE_ERROR_MSG_RE.sub(r'\g<1>{}'.format(new_line), msg)
 
 
-def _normalize_line_number(line_no, msg, py_by_line_no, cheetah_by_line_no):
-    msg = _normalize_msg_line_no(msg, py_by_line_no, cheetah_by_line_no)
+def _normalize_line(line_no, code, msg, py_by_line_no, cheetah_by_line_no):
+    msg = _normalize_msg_line_no(msg, code, py_by_line_no, cheetah_by_line_no)
     line_no = _get_line_no(
         line_no, py_by_line_no, cheetah_by_line_no, LineNoHint.LAST_IMPORT,
     )
-    return line_no, msg
+    return line_no, code, msg
 
 
-def normalize_line_numbers(data, py_lines, cheetah_lines):
+def normalize_lines(data, py_lines, cheetah_lines):
     # Let's not think about the difference between index and line number
     py_by_line_no = ('',) + tuple(py_lines)
     cheetah_by_line_no = ('',) + tuple(cheetah_lines)
     return tuple(
-        _normalize_line_number(line_no, msg, py_by_line_no, cheetah_by_line_no)
-        for line_no, msg in data
+        _normalize_line(line_no, code, msg, py_by_line_no, cheetah_by_line_no)
+        for line_no, code, msg in data
     )
 
 
 def check_flake8(py_lines):
-    # Apologies, flake8 doesn't quite make this elegant / easy
-    checker = get_style_guide(select=SELECTED_ERRORS)
-    reporter = checker.init_report(DataCollectingReporter)
-    checker.input_file('<compiled cheetah>', py_lines)
-    return filter_known_unused_assignments(filter_known_unused_imports(
-        reporter.data,
-    ))
+    with tempfile.NamedTemporaryFile(suffix='.py') as tmpfile:
+        tmpfile.write(''.join(py_lines).encode('UTF-8'))
+        tmpfile.flush()
+        cmd = (
+            sys.executable, '-mflake8', tmpfile.name,
+            '--format=%(row)s\t%(code)s\t%(text)s',
+            '--select={}'.format(SELECTED_ERRORS),
+        )
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        out, _ = proc.communicate()
+
+    split = (line.split('\t') for line in out.decode().splitlines())
+    ret = [(int(col), code, msg) for col, code, msg in split]
+    return filter_known_errors(ret)
 
 
 def to_readline(py_lines):
@@ -284,8 +273,9 @@ def check_unicode_literals(py_lines):
         if token_type == tokenize.STRING and token_s.startswith(('u', 'U')):
             data += ((
                 start[0],
-                'P001 unicode literal prefix is unnecessary (assumed) in '
-                'cheetah templates: ' + token_s
+                'P001',
+                'unicode literal prefix is unnecessary (assumed) in '
+                'cheetah templates: {}'.format(token_s),
             ),)
     return data
 
@@ -302,9 +292,7 @@ def get_from_py(file_contents):
     py_source = to_py(file_contents)
     py_lines = py_source.splitlines(True)
     for check in PY_CHECKS:
-        data += normalize_line_numbers(
-            check(py_lines), py_lines, cheetah_lines,
-        )
+        data += normalize_lines(check(py_lines), py_lines, cheetah_lines)
     return data
 
 
@@ -325,7 +313,7 @@ def check_implements(cheetah_by_line_no):
         return (
             (
                 implements[0],
-                "T001 '#implements respond' is assumed without '#extends'"
+                'T001', "'#implements respond' is assumed without '#extends'"
             ),
         )
     else:
@@ -338,7 +326,8 @@ def check_extends_cheetah_template(cheetah_by_line_no):
             return (
                 (
                     line_no,
-                    "T002 '#extends Cheetah.Template' "
+                    'T002',
+                    "'#extends Cheetah.Template' "
                     "is assumed without '#extends'",
                 ),
             )
@@ -353,15 +342,17 @@ def check_indentation(cheetah_by_line_no):
     for line_no, line in enumerate(cheetah_by_line_no):
         ws = getattr(LEADING_WHITESPACE.match(line), 'group', lambda: '')()
         if '\t' in ws:
-            errors.append((line_no, 'T003 Indentation contains tabs'))
+            errors.append((line_no, 'T003', 'Indentation contains tabs'))
         elif len(ws) % 4 != 0:
-            errors.append((line_no, 'T004 Indentation is not a multiple of 4'))
+            errors.append((
+                line_no, 'T004', 'Indentation is not a multiple of 4',
+            ))
     return tuple(errors)
 
 
 def check_empty(cheetah_by_line_no):
     if not ''.join(cheetah_by_line_no).strip():
-        return ((1, 'T005 File is empty'),)
+        return ((1, 'T005', 'File is empty'),)
     else:
         return ()
 
@@ -392,8 +383,8 @@ def get_flakes(file_contents):
 def flake(filename):
     file_contents = read_file(filename)
     flakes = get_flakes(file_contents)
-    for lineno, msg in flakes:
-        print(five.n('{}:{} {}'.format(filename, lineno, msg)))
+    for lineno, code, msg in flakes:
+        print(five.n('{}:{} {} {}'.format(filename, lineno, code, msg)))
     return int(bool(flakes))
 
 

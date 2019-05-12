@@ -7,8 +7,7 @@ import pytest
 from cheetah_lint import five
 from cheetah_lint.flake import _find_bounds
 from cheetah_lint.flake import _get_line_no_from_comments
-from cheetah_lint.flake import filter_known_unused_assignments
-from cheetah_lint.flake import filter_known_unused_imports
+from cheetah_lint.flake import filter_known_errors
 from cheetah_lint.flake import get_flakes
 from cheetah_lint.flake import LINE_ERROR_MSG_RE
 from cheetah_lint.flake import LINECOL_COMMENT_RE
@@ -18,10 +17,10 @@ from cheetah_lint.flake import STRIP_SYMBOLS_RE
 
 
 def test_filter_known_unused_imports_filters_known():
-    ret = filter_known_unused_imports((
+    ret = filter_known_errors((
         (
             1,
-            'F401 '
+            'F401',
             "'Cheetah.NameMapper.value_from_namespace as VFNS' imported but "
             'unused',
         ),
@@ -30,23 +29,27 @@ def test_filter_known_unused_imports_filters_known():
 
 
 def test_filter_known_unused_imports_ignores_unknown():
-    ret = filter_known_unused_imports(((1, "F401 'a' imported but unused"),))
-    assert ret == ((1, "F401 'a' imported but unused"),)
+    ret = filter_known_errors(((1, 'F401', "'a' imported but unused"),))
+    assert ret == ((1, 'F401', "'a' imported but unused"),)
 
 
-def test_filter_known_unused_assignments_filters_known():
-    ret = filter_known_unused_assignments((
-        (1, "F841 local variable '_dummyTrans' is assigned to but never used"),
+def test_filter_known_errors_filters_known():
+    ret = filter_known_errors((
+        (
+            1,
+            'F841',
+            "local variable '_dummyTrans' is assigned to but never used",
+        ),
     ))
     assert ret == ()
 
 
-def test_filter_known_unused_assignments_ignores_unknown():
-    ret = filter_known_unused_assignments((
-        (1, "F841 local variable 'a' is assigned to but never used"),
+def test_filter_known_errors_ignores_unknown():
+    ret = filter_known_errors((
+        (1, 'F841', "local variable 'a' is assigned to but never used"),
     ))
     assert ret == (
-        (1, "F841 local variable 'a' is assigned to but never used"),
+        (1, 'F841', "local variable 'a' is assigned to but never used"),
     )
 
 
@@ -222,7 +225,7 @@ def test_find_bounds_above_and_below(py_line):
 
 
 def test_get_flakes_trivial():
-    assert get_flakes('') == ((1, 'T005 File is empty'),)
+    assert get_flakes('') == ((1, 'T005', 'File is empty'),)
 
 
 def test_with_extends():
@@ -299,7 +302,7 @@ def test_oneline_directive_followed_by_directive():
 
 def test_module_imported_but_unused():
     assert get_flakes('#import foo') == (
-        (1, "F401 'foo' imported but unused"),
+        (1, 'F401', "'foo' imported but unused"),
     )
 
 
@@ -310,7 +313,7 @@ def test_module_imported_but_unused_lots_of_lines():
         '    $bar\n'
         '#end def\n'
     ) == (
-        (1, "F401 'foo' imported but unused"),
+        (1, 'F401', "'foo' imported but unused"),
     )
 
 
@@ -323,14 +326,50 @@ def test_module_shadowed_by_loop_variable():
         '    $foo\n'
         '#end for\n'
     ) == (
-        (4, "F402 import 'foo' from line 1 shadowed by loop variable"),
+        (4, 'F402', "import 'foo' from line 1 shadowed by loop variable"),
     )
 
 
 def test_star_import():
     assert get_flakes('#from foo import *') == (
-        (1, "F401 'foo.*' imported but unused"),
-        (1, "F403 'from foo import *' used; unable to detect undefined names"),
+        (1, 'F401', "'foo.*' imported but unused"),
+        (
+            1,
+            'F403',
+            "'from foo import *' used; unable to detect undefined names",
+        ),
+    )
+
+
+def test_duplicated_key_const():
+    assert get_flakes('#py x = {True: 1, True: 2}\n$x') == (
+        (1, 'F601', 'dictionary key True repeated with different values'),
+        (1, 'F601', 'dictionary key True repeated with different values'),
+    )
+
+
+def test_duplicated_key_name():
+    assert get_flakes(
+        '#py x = 1\n'
+        '#py y = {x: 1, x: 2}\n'
+        '$y\n',
+    ) == (
+        (
+            2,
+            'F602',
+            'dictionary key variable x repeated with different values',
+        ),
+        (
+            2,
+            'F602',
+            'dictionary key variable x repeated with different values',
+        ),
+    )
+
+
+def test_compare_against_literal():
+    assert get_flakes('#py x = 5\n${x is 5}') == (
+        (2, 'F632', 'use ==/!= to compare str, bytes, and int literals'),
     )
 
 
@@ -340,7 +379,7 @@ def test_redefinition_of_unused_name():
         '#import foo.bar\n'
         '$foo.baz()'
     ) == (
-        (2, "F811 redefinition of unused 'foo' from line 1"),
+        (2, 'F811', "redefinition of unused 'foo' from line 1"),
     )
 
 
@@ -351,16 +390,16 @@ def test_redefinition_of_unused_name_block_def():
         '#def foo()\n'
         '#end def\n'
     ) == (
-        (3, "F811 redefinition of unused 'foo' from line 1"),
+        (3, 'F811', "redefinition of unused 'foo' from line 1"),
     )
 
 
 def test_list_comprehension_redefines_name():
     # python 3 makes this not an issue
     expected = (
-        ((1, "F841 local variable 'foo' is assigned to but never used"),)
+        ((1, 'F841', "local variable 'foo' is assigned to but never used"),)
         if five.PY3 else
-        ((2, "F812 list comprehension redefines 'foo' from line 1"),)
+        ((2, 'F812', "list comprehension redefines 'foo' from line 1"),)
     )
     assert get_flakes(
         '#py foo = $bar\n'
@@ -372,13 +411,13 @@ def test_list_comprehension_redefines_name():
 
 def test_unused_local_variable():
     assert get_flakes('#py foo = $bar') == (
-        (1, "F841 local variable 'foo' is assigned to but never used"),
+        (1, 'F841', "local variable 'foo' is assigned to but never used"),
     )
 
 
 def test_comparison_to_none():
     assert get_flakes('#if $foo == None: herp') == (
-        (1, "E711 comparison to None should be 'if cond is None:'"),
+        (1, 'E711', "comparison to None should be 'if cond is None:'"),
     )
 
 
@@ -386,33 +425,40 @@ def test_comparison_to_true():
     assert get_flakes('#if $foo == True: herp') == (
         (
             1,
-            "E712 comparison to True should be "
-            "'if cond is True:' or 'if cond:'",
+            'E712',
+            "comparison to True should be 'if cond is True:' or 'if cond:'",
         ),
     )
 
 
 def test_membership():
     assert get_flakes('#py baz = foo = None\n#if not $baz in $foo: herp') == (
-        (2, "E713 test for membership should be 'not in'"),
+        (2, 'E713', "test for membership should be 'not in'"),
     )
 
 
 def test_identity():
     assert get_flakes('#py bar = foo = None\n#if not $bar is $foo: herp') == (
-        (2, "E714 test for object identity should be 'is not'"),
+        (2, 'E714', "test for object identity should be 'is not'"),
     )
 
 
 def test_has_key():
     assert get_flakes('#if $foo.has_key($bar): herp') == (
-        (1, "W601 .has_key() is deprecated, use 'in'"),
+        (1, 'W601', ".has_key() is deprecated, use 'in'"),
     )
+
+
+def test_invalid_escape_sequence():
+    with pytest.warns(None):  # in py3 the compilation of this causes a warning
+        assert get_flakes(r'${"\q"}') == (
+            (1, 'W605', r"invalid escape sequence '\q'"),
+        )
 
 
 def test_syntaxerror():
     assert get_flakes('#if foo = "bar": herp') == (
-        (1, "E901 SyntaxError: invalid syntax"),
+        (1, 'E999', "SyntaxError: invalid syntax"),
     )
 
 
@@ -436,15 +482,15 @@ def test_cannot_determine_line_number():
     ) == (
         (
             0,
-            "E712 comparison to True should be "
-            "'if cond is True:' or 'if cond:'"
+            'E712',
+            "comparison to True should be 'if cond is True:' or 'if cond:'"
         ),
     )
 
 
 def test_implements_respond_no_extend():
     assert get_flakes('#implements respond') == (
-        (1, "T001 '#implements respond' is assumed without '#extends'"),
+        (1, 'T001', "'#implements respond' is assumed without '#extends'"),
     )
 
 
@@ -458,7 +504,11 @@ def test_implements_non_respond():
 
 def test_extends_cheetah_template():
     assert get_flakes('#extends Cheetah.Template') == (
-        (1, "T002 '#extends Cheetah.Template' is assumed without '#extends'"),
+        (
+            1,
+            'T002',
+            "'#extends Cheetah.Template' is assumed without '#extends'",
+        ),
     )
 
 
@@ -472,7 +522,7 @@ def test_indents_with_tabs():
         '\tHello world\n'
         '#end if\n',
     ) == (
-        (2, 'T003 Indentation contains tabs'),
+        (2, 'T003', 'Indentation contains tabs'),
     )
 
 
@@ -482,7 +532,7 @@ def test_indents_not_four_spaces():
         '   Hello world\n'
         '#end if\n'
     ) == (
-        (2, 'T004 Indentation is not a multiple of 4'),
+        (2, 'T004', 'Indentation is not a multiple of 4'),
     )
 
 
@@ -492,8 +542,9 @@ def test_unicode_literals():
     ) == (
         (
             1,
-            'P001 unicode literal prefix is unnecessary (assumed) in cheetah '
-            "templates: u'hi ☃'"
+            'P001',
+            'unicode literal prefix is unnecessary (assumed) in cheetah '
+            "templates: u'hi ☃'",
         ),
     )
 
