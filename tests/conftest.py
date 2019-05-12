@@ -7,8 +7,9 @@ from cheetah_lint import five
 @pytest.fixture(autouse=True)
 def no_warnings(recwarn):
     yield
-    ret = len(tuple(
-        warning for warning in recwarn
+    warnings = tuple(
+        '{}:{} {}'.format(warning.filename, warning.lineno, warning.message)
+        for warning in recwarn
         # cheetah raises this warning when compiling a trivial file
         if not (
             isinstance(warning.message, UserWarning) and
@@ -16,5 +17,5 @@ def no_warnings(recwarn):
                 'You supplied an empty string for the source!'
             )
         )
-    ))
-    assert ret == 0
+    )
+    assert not warnings
