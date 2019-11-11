@@ -1,8 +1,8 @@
-[![Build Status](https://travis-ci.org/asottile/cheetah_lint.svg?branch=master)](https://travis-ci.org/asottile/cheetah_lint)
-[![Coverage Status](https://img.shields.io/coveralls/asottile/cheetah_lint.svg?branch=master)](https://coveralls.io/r/asottile/cheetah_lint)
+[![Build Status](https://dev.azure.com/asottile/asottile/_apis/build/status/asottile.cheetah_lint?branchName=master)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=41&branchName=master)
+[![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/asottile/asottile/41/master.svg)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=41&branchName=master)
 
 cheetah_lint
-==========
+============
 
 Linting tools for the [yelp_cheetah](https://github.com/Yelp/yelp_cheetah) templating language.
 
@@ -14,8 +14,8 @@ Linting tools for the [yelp_cheetah](https://github.com/Yelp/yelp_cheetah) templ
 
 ## Console scripts
 
-```
-cheetah-reorder-imports --help
+```console
+$ cheetah-reorder-imports --help
 usage: cheetah-reorder-imports [-h] [filenames [filenames ...]]
 
 positional arguments:
@@ -25,8 +25,8 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-```
-cheetah-flake --help
+```console
+$ cheetah-flake --help
 usage: cheetah-flake [-h] [filenames [filenames ...]]
 
 positional arguments:
