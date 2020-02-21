@@ -1,25 +1,25 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import argparse
+import enum
 import re
 import subprocess
 import sys
 import tempfile
 import tokenize
+from typing import Callable
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
 
 from Cheetah.compile import compile_source
 from Cheetah.legacy_compiler import LegacyCompiler
 
-from cheetah_lint import five
 from cheetah_lint.util import read_file
 
+LintCode = Tuple[int, str, str]
 
 ACCEPTABLE_UNUSED_ASSIGNMENTS = ('_dummyTrans', 'NS')
 UNUSED_ASSIGNMENTS_FLAKE8_MESSAGES = frozenset(
-    "local variable '{}' is assigned to but never used".format(name)
+    f"local variable '{name}' is assigned to but never used"
     for name in ACCEPTABLE_UNUSED_ASSIGNMENTS
 )
 
@@ -27,7 +27,7 @@ ACCEPTABLE_UNUSED_IMPORTS = (
     'Cheetah.NameMapper.value_from_namespace as VFNS',
 )
 UNUSED_IMPORTS_FLAKE8_MESSAGES = frozenset(
-    "'{}' imported but unused".format(name)
+    f"'{name}' imported but unused"
     for name in ACCEPTABLE_UNUSED_IMPORTS
 )
 
@@ -73,16 +73,16 @@ SELECTED_ERRORS = ','.join((
 
 
 class NoCompilerSettingsCompiler(LegacyCompiler):
-    def add_compiler_settings(self):
+    def add_compiler_settings(self) -> None:
         # Consume the settings string, but do not assign it
         self.clearStrConst()
 
 
-def to_py(src):
+def to_py(src: str) -> str:
     return compile_source(src, compiler_cls=NoCompilerSettingsCompiler)
 
 
-def filter_known_errors(data):
+def filter_known_errors(data: Sequence[LintCode]) -> Tuple[LintCode, ...]:
     return tuple(
         (line, code, msg)
         for line, code, msg in data
@@ -99,19 +99,16 @@ PY_DEF_RE = re.compile(
     # group2: params
     # group3: ):
     # Meanwhile ignoring `self` which is added by cheetah
-    r'^\s+(def [A-Za-z0-9_]+\()self(?:, )?(.*?)(\):)$'
+    r'^\s+(def [A-Za-z0-9_]+\()self(?:, )?(.*?)(\):)$',
 )
 STRIP_SYMBOLS_RE = re.compile(r'[^A-Za-z0-9_]')
 NEED_LINE_NUMBER_NORMALIZED = frozenset({'F402', 'F811', 'F812'})
 IMPORT_TYPE_CODES = frozenset({'F401', 'F403', 'F811'})
 
-
-class LineNoHint(object):
-    FIRST_IMPORT = 'FIRST_IMPORT'
-    LAST_IMPORT = 'LAST_IMPORT'
+LineNoHint = enum.Enum('LineNoHing', 'FIRST_IMPORT LAST_IMPORT')
 
 
-def _get_line_no_from_comments(py_line):
+def _get_line_no_from_comments(py_line: str) -> int:
     """Return the line number parsed from the comment or 0."""
     matched = LINECOL_COMMENT_RE.match(py_line)
     if matched:
@@ -120,7 +117,11 @@ def _get_line_no_from_comments(py_line):
         return 0
 
 
-def _find_bounds(py_line_no, py_by_line_no, cheetah_by_line_no):
+def _find_bounds(
+        py_line_no: int,
+        py_by_line_no: Sequence[str],
+        cheetah_by_line_no: Sequence[str],
+) -> Tuple[int, int]:
     """Searches before and after in the python source to find comments which
     denote cheetah line numbers.  If a lower bound is not found, 0 is
     substituted.  If an upper bound is not found, len(cheetah lines) is
@@ -149,24 +150,27 @@ def _find_bounds(py_line_no, py_by_line_no, cheetah_by_line_no):
     return lower_bound, upper_bound
 
 
-def _fuzz_line(s):
+def _fuzz_line(s: str) -> str:
     return STRIP_SYMBOLS_RE.sub('', s)
 
 
-def _fuzz_py_line(s):
+def _fuzz_py_line(s: str) -> str:
     # Normalize function definition lines to look more like the cheetah
     # equivalent
     return _fuzz_line(PY_DEF_RE.sub(r'\1\2\3', s))
 
 
-def _fuzz_cheetah_line(s):
+def _fuzz_cheetah_line(s: str) -> str:
     # Normalize function definiton to look more like the python equivalent
     return _fuzz_line(s.replace('#block ', '#def '))
 
 
 def _find_fuzzy_line(
-        py_line_no, py_by_line_no, cheetah_by_line_no, prefer_first
-):
+        py_line_no: int,
+        py_by_line_no: Sequence[str],
+        cheetah_by_line_no: Sequence[str],
+        prefer_first: bool,
+) -> int:
     """Attempt to fuzzily find matching lines."""
     stripped_line = _fuzz_py_line(py_by_line_no[py_line_no])
     cheetah_lower_bound, cheetah_upper_bound = _find_bounds(
@@ -177,7 +181,7 @@ def _find_fuzzy_line(
         cheetah_lower_bound:cheetah_upper_bound
     ]
     if not prefer_first:
-        sliced = reversed(sliced)
+        sliced = list(reversed(sliced))
 
     for line_no, line in sliced:
         if stripped_line in _fuzz_cheetah_line(line):
@@ -187,7 +191,12 @@ def _find_fuzzy_line(
         return 0
 
 
-def _get_line_no(py_line_no, py_by_line_no, cheetah_by_line_no, hint=None):
+def _get_line_no(
+        py_line_no: int,
+        py_by_line_no: Sequence[str],
+        cheetah_by_line_no: Sequence[str],
+        hint: Optional[LineNoHint] = None,
+) -> int:
     # Attempt to find it by the cheetah compiler comments
     ret = _get_line_no_from_comments(py_by_line_no[py_line_no])
     if ret != 0:
@@ -207,18 +216,34 @@ def _get_line_no(py_line_no, py_by_line_no, cheetah_by_line_no, hint=None):
     return 0
 
 
-def _normalize_msg_line_no(msg, code, py_by_line_no, cheetah_by_line_no):
+def _normalize_msg_line_no(
+        msg: str,
+        code: str,
+        py_by_line_no: Sequence[str],
+        cheetah_by_line_no: Sequence[str],
+) -> str:
     if code not in NEED_LINE_NUMBER_NORMALIZED:
         return msg
 
-    line_no = int(LINE_ERROR_MSG_RE.match(msg).group(2))
-    new_line = five.text(_get_line_no(
-        line_no, py_by_line_no, cheetah_by_line_no, LineNoHint.FIRST_IMPORT,
-    ))
-    return LINE_ERROR_MSG_RE.sub(r'\g<1>{}'.format(new_line), msg)
+    match = LINE_ERROR_MSG_RE.match(msg)
+    assert match is not None
+    line_no = int(match.group(2))
+    new_line = str(
+        _get_line_no(
+            line_no, py_by_line_no, cheetah_by_line_no,
+            LineNoHint.FIRST_IMPORT,
+        ),
+    )
+    return LINE_ERROR_MSG_RE.sub(fr'\g<1>{new_line}', msg)
 
 
-def _normalize_line(line_no, code, msg, py_by_line_no, cheetah_by_line_no):
+def _normalize_line(
+        line_no: int,
+        code: str,
+        msg: str,
+        py_by_line_no: Sequence[str],
+        cheetah_by_line_no: Sequence[str],
+) -> Tuple[int, str, str]:
     msg = _normalize_msg_line_no(msg, code, py_by_line_no, cheetah_by_line_no)
     line_no = _get_line_no(
         line_no, py_by_line_no, cheetah_by_line_no, LineNoHint.LAST_IMPORT,
@@ -226,7 +251,11 @@ def _normalize_line(line_no, code, msg, py_by_line_no, cheetah_by_line_no):
     return line_no, code, msg
 
 
-def normalize_lines(data, py_lines, cheetah_lines):
+def normalize_lines(
+        data: Sequence[LintCode],
+        py_lines: Sequence[str],
+        cheetah_lines: Sequence[str],
+) -> Tuple[LintCode, ...]:
     # Let's not think about the difference between index and line number
     py_by_line_no = ('',) + tuple(py_lines)
     cheetah_by_line_no = ('',) + tuple(cheetah_lines)
@@ -236,14 +265,14 @@ def normalize_lines(data, py_lines, cheetah_lines):
     )
 
 
-def check_flake8(py_lines):
+def check_flake8(py_lines: Sequence[str]) -> Tuple[LintCode, ...]:
     with tempfile.NamedTemporaryFile(suffix='.py') as tmpfile:
         tmpfile.write(''.join(py_lines).encode('UTF-8'))
         tmpfile.flush()
         cmd = (
             sys.executable, '-mflake8', tmpfile.name,
             '--format=%(row)s\t%(code)s\t%(text)s',
-            '--select={}'.format(SELECTED_ERRORS),
+            f'--select={SELECTED_ERRORS}',
         )
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         out, _ = proc.communicate()
@@ -253,10 +282,10 @@ def check_flake8(py_lines):
     return filter_known_errors(ret)
 
 
-def to_readline(py_lines):
+def to_readline(py_lines: Sequence[str]) -> Callable[[], str]:
     it = iter(py_lines)
 
-    def readline():
+    def readline() -> str:
         try:
             return next(it)
         except StopIteration:
@@ -265,18 +294,20 @@ def to_readline(py_lines):
     return readline
 
 
-def check_unicode_literals(py_lines):
-    data = ()
+def check_unicode_literals(py_lines: Sequence[str]) -> Tuple[LintCode, ...]:
+    data: Tuple[LintCode, ...] = ()
     readline = to_readline(py_lines)
 
     for token_type, token_s, start, _, _ in tokenize.generate_tokens(readline):
         if token_type == tokenize.STRING and token_s.startswith(('u', 'U')):
-            data += ((
-                start[0],
-                'P001',
-                'unicode literal prefix is unnecessary (assumed) in '
-                'cheetah templates: {}'.format(token_s),
-            ),)
+            data += (
+                (
+                    start[0],
+                    'P001',
+                    'unicode literal prefix is unnecessary (assumed) in '
+                    'cheetah templates: {}'.format(token_s),
+                ),
+            )
     return data
 
 
@@ -286,8 +317,8 @@ PY_CHECKS = (
 )
 
 
-def get_from_py(file_contents):
-    data = ()
+def get_from_py(file_contents: str) -> Tuple[LintCode, ...]:
+    data: Tuple[LintCode, ...] = ()
     cheetah_lines = file_contents.splitlines(True)
     py_source = to_py(file_contents)
     py_lines = py_source.splitlines(True)
@@ -296,7 +327,9 @@ def get_from_py(file_contents):
     return data
 
 
-def check_implements(cheetah_by_line_no):
+def check_implements(
+        cheetah_by_line_no: Sequence[str],
+) -> Tuple[LintCode, ...]:
     extends = None
     implements = None
     for line_no, line in enumerate(cheetah_by_line_no):
@@ -313,14 +346,16 @@ def check_implements(cheetah_by_line_no):
         return (
             (
                 implements[0],
-                'T001', "'#implements respond' is assumed without '#extends'"
+                'T001', "'#implements respond' is assumed without '#extends'",
             ),
         )
     else:
         return ()
 
 
-def check_extends_cheetah_template(cheetah_by_line_no):
+def check_extends_cheetah_template(
+        cheetah_by_line_no: Sequence[str],
+) -> Tuple[LintCode, ...]:
     for line_no, line in enumerate(cheetah_by_line_no):
         if line.strip() == '#extends Cheetah.Template':
             return (
@@ -337,7 +372,9 @@ def check_extends_cheetah_template(cheetah_by_line_no):
 LEADING_WHITESPACE = re.compile('^[ \t]+')
 
 
-def check_indentation(cheetah_by_line_no):
+def check_indentation(
+        cheetah_by_line_no: Sequence[str],
+) -> Tuple[LintCode, ...]:
     errors = []
     for line_no, line in enumerate(cheetah_by_line_no):
         ws = getattr(LEADING_WHITESPACE.match(line), 'group', lambda: '')()
@@ -350,7 +387,7 @@ def check_indentation(cheetah_by_line_no):
     return tuple(errors)
 
 
-def check_empty(cheetah_by_line_no):
+def check_empty(cheetah_by_line_no: Sequence[str]) -> Tuple[LintCode, ...]:
     if not ''.join(cheetah_by_line_no).strip():
         return ((1, 'T005', 'File is empty'),)
     else:
@@ -365,31 +402,28 @@ LINE_CHECKS = (
 )
 
 
-def get_from_lines(file_contents):
+def get_from_lines(file_contents: str) -> Tuple[LintCode, ...]:
     cheetah_by_line_no = ('',) + tuple(file_contents.splitlines(True))
-    data = ()
+    data: Tuple[LintCode, ...] = ()
     for check in LINE_CHECKS:
         data += check(cheetah_by_line_no)
     return data
 
 
-def get_flakes(file_contents):
-    data = ()
-    data += get_from_py(file_contents)
-    data += get_from_lines(file_contents)
+def get_flakes(file_contents: str) -> Tuple[LintCode, ...]:
+    data = (*get_from_py(file_contents), *get_from_lines(file_contents))
     return tuple(sorted(data))
 
 
-def flake(filename):
+def flake(filename: str) -> int:
     file_contents = read_file(filename)
     flakes = get_flakes(file_contents)
     for lineno, code, msg in flakes:
-        print(five.n('{}:{} {} {}'.format(filename, lineno, code, msg)))
+        print(f'{filename}:{lineno} {code} {msg}')
     return int(bool(flakes))
 
 
-def main(argv=None):
-    argv = argv if argv is not None else sys.argv[1:]
+def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('filenames', nargs='*', help='Filenames to flake.')
     args = parser.parse_args(argv)

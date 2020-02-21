@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
-import io
 import os.path
 
 import pytest
@@ -42,7 +38,7 @@ def test_integration_calls_main(tmpdir, template):
     contents, expected = get_input_output(template)
     template_path = os.path.join(tmpdir.strpath, 'tmp.tmpl')
 
-    with io.open(template_path, 'w') as template_file:
+    with open(template_path, 'w') as template_file:
         template_file.write(contents)
 
     main([template_path])
