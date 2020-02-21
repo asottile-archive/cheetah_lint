@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import argparse
-import io
 import sys
+from typing import Callable
+from typing import Optional
+from typing import Sequence
+from typing import Set
 
 import lxml.etree
+from aspy.refactor_imports.import_obj import AbstractImportObj
 from aspy.refactor_imports.sort import sort
 from refactorlib.cheetah.parse import parse
 from refactorlib.node import ExactlyOneError
@@ -20,20 +19,20 @@ from cheetah_lint.imports import combine_import_objs
 from cheetah_lint.util import read_file
 
 
-def separate_comma_imports(xmldoc):
+def separate_comma_imports(xmldoc: lxml.etree.Element) -> str:
     imports = get_all_imports(xmldoc)
 
     for import_obj in imports:
         if import_obj.import_obj.has_multiple_imports:
             import_obj.directive_element.replace_self(
-                import_obj.get_new_import_statements()
+                import_obj.get_new_import_statements(),
             )
 
     return xmldoc.totext(encoding='unicode')
 
 
-def remove_duplicated_imports(xmldoc):
-    previously_seen_imports = set()
+def remove_duplicated_imports(xmldoc: lxml.etree.Element) -> str:
+    previously_seen_imports: Set[AbstractImportObj] = set()
     for import_obj in get_all_imports(xmldoc):
         if import_obj.import_obj in previously_seen_imports:
             import_obj.directive_element.remove_self()
@@ -42,7 +41,7 @@ def remove_duplicated_imports(xmldoc):
     return xmldoc.totext(encoding='unicode')
 
 
-def apply_import_ordering(xmldoc):
+def apply_import_ordering(xmldoc: lxml.etree.Element) -> str:
     compiler_settings = get_compiler_settings_directive(xmldoc)
     extends = get_extends_directive(xmldoc)
     implements = get_implements_directive(xmldoc)
@@ -77,7 +76,7 @@ def apply_import_ordering(xmldoc):
     return xmldoc.totext(encoding='unicode')
 
 
-def fix_whitespace_after_imports(xmldoc):
+def fix_whitespace_after_imports(xmldoc: lxml.etree.Element) -> str:
     try:
         last_directive = xmldoc.xpath_one(
             """(
@@ -92,7 +91,7 @@ def fix_whitespace_after_imports(xmldoc):
                     )
                 ]
             )[last()]
-            """
+            """,
         )
         following_whitespace_element = last_directive.xpath_one(
             'following-sibling::*[1]',
@@ -107,7 +106,10 @@ def fix_whitespace_after_imports(xmldoc):
     return xmldoc.totext(encoding='unicode').rstrip('\n') + '\n'
 
 
-def perform_step(file_contents, step):
+def perform_step(
+        file_contents: str,
+        step: Callable[[lxml.etree.Element], str],
+) -> str:
     """Performs a step of the transformation.
 
     :param text file_contents: Contends of the cheetah template
@@ -127,7 +129,7 @@ STEPS = [
 ]
 
 
-def main(argv=None):
+def main(argv: Optional[Sequence[str]] = None) -> int:
     argv = argv or sys.argv[1:]
     parser = argparse.ArgumentParser()
     parser.add_argument('filenames', nargs='*')
@@ -142,8 +144,8 @@ def main(argv=None):
 
         if file_contents != original_contents:
             retv = 1
-            print('Reordered imports in {}'.format(filename))
-            with io.open(filename, 'w') as file_obj:
+            print(f'Reordered imports in {filename}')
+            with open(filename, 'w') as file_obj:
                 file_obj.write(file_contents)
 
     return retv

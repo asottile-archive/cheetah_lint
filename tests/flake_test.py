@@ -1,10 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import pytest
 
-from cheetah_lint import five
 from cheetah_lint.flake import _find_bounds
 from cheetah_lint.flake import _get_line_no_from_comments
 from cheetah_lint.flake import filter_known_errors
@@ -55,21 +50,25 @@ def test_filter_known_errors_ignores_unknown():
 
 def test_linecol_comment_regex_no_match():
     assert LINECOL_COMMENT_RE.match(
-        "            write('''                ''')\n"
+        "            write('''                ''')\n",
     ) is None
 
 
 def test_linecol_comment_regex_match():
-    assert LINECOL_COMMENT_RE.match(
+    match = LINECOL_COMMENT_RE.match(
         '        if meta_robots.should_display: '
-        '# generated from line 260, col 13\n'
-    ).group(1) == '260'
+        '# generated from line 260, col 13\n',
+    )
+    assert match
+    assert match.group(1) == '260'
 
 
 def test_linecol_comment_regex_other_match():
-    assert LINECOL_COMMENT_RE.match(
-        "        _v = bar # u'$bar' on line 1, col 1\n"
-    ).group(1) == '1'
+    match = LINECOL_COMMENT_RE.match(
+        "        _v = bar # u'$bar' on line 1, col 1\n",
+    )
+    assert match
+    assert match.group(1) == '1'
 
 
 def test_line_error_message_no_match():
@@ -85,7 +84,9 @@ def test_line_error_message_no_match():
     ),
 )
 def test_line_error_message_match(line):
-    assert LINE_ERROR_MSG_RE.match(line).group(2) == '9001'
+    match = LINE_ERROR_MSG_RE.match(line)
+    assert match
+    assert match.group(2) == '9001'
 
 
 def test_line_error_message_sub():
@@ -112,6 +113,7 @@ def test_py_def_re_matches(input_str):
 
 def test_py_def_re_specific_matches():
     match = PY_DEF_RE.match('    def foo(self):\n')
+    assert match
     assert match.group(1) == 'def foo('
     assert match.group(2) == ''
     assert match.group(3) == '):'
@@ -119,6 +121,7 @@ def test_py_def_re_specific_matches():
 
 def test_py_def_re_specific_matches_with_params():
     match = PY_DEF_RE.match('    def foo(self, foo=bar):\n')
+    assert match
     assert match.group(1) == 'def foo('
     assert match.group(2) == 'foo=bar'
     assert match.group(3) == '):'
@@ -126,6 +129,7 @@ def test_py_def_re_specific_matches_with_params():
 
 def test_py_def_re_specific_matches_with_kwargs():
     match = PY_DEF_RE.match('    def foo(self, foo=bar, **kwargs):\n')
+    assert match
     assert match.group(1) == 'def foo('
     assert match.group(2) == 'foo=bar, **kwargs'
     assert match.group(3) == '):'
@@ -171,7 +175,7 @@ def test_get_line_no_from_comments(line, expected):
 
 
 CHEETAH_BY_LINE_NO = ('',) + tuple(
-    '## line {}'.format(i) for i in range(1, 9)
+    f'## line {i}' for i in range(1, 9)
 )
 
 
@@ -244,7 +248,7 @@ def test_multi_line_invocation():
     assert get_flakes(
         '$foo(\n'
         '    $bar,\n'
-        ')'
+        ')',
     ) == ()
 
 
@@ -252,7 +256,7 @@ def test_other_multi_line_invocation():
     assert get_flakes(
         '$foo("bar"\n'
         '    "baz"\n'
-        ')'
+        ')',
     ) == ()
 
 
@@ -266,7 +270,7 @@ def test_indented_thrice_multiline():
         '            )\n'
         '        </div>\n'
         '    </div>\n'
-        '#end def\n'
+        '#end def\n',
     ) == ()
 
 
@@ -275,7 +279,7 @@ def test_multiline_dictionary_literal():
         '#py foo = {\n'
         '    "bar": "baz",\n'
         '}\n'
-        '$foo\n'
+        '$foo\n',
     ) == ()
 
 
@@ -286,7 +290,7 @@ def test_indented_multiline_dictionary_literal():
         '        "bar": "baz",\n'
         '    }\n'
         '    $foo\n'
-        '#end if\n'
+        '#end if\n',
     ) == ()
 
 
@@ -296,7 +300,7 @@ def test_oneline_directive_followed_by_directive():
         '    #def title()##end def#\n'
         '    #py foo = "bar"\n'
         '    $foo\n'
-        '#end if\n'
+        '#end if\n',
     ) == ()
 
 
@@ -311,7 +315,7 @@ def test_module_imported_but_unused_lots_of_lines():
         '#import foo\n'
         '#def womp()\n'
         '    $bar\n'
-        '#end def\n'
+        '#end def\n',
     ) == (
         (1, 'F401', "'foo' imported but unused"),
     )
@@ -324,7 +328,7 @@ def test_module_shadowed_by_loop_variable():
         '$foo\n'
         '#for foo in (1, 2, 3)\n'
         '    $foo\n'
-        '#end for\n'
+        '#end for\n',
     ) == (
         (4, 'F402', "import 'foo' from line 1 shadowed by loop variable"),
     )
@@ -377,7 +381,7 @@ def test_redefinition_of_unused_name():
     assert get_flakes(
         '#import foo.bar\n'
         '#import foo.bar\n'
-        '$foo.baz()'
+        '$foo.baz()',
     ) == (
         (2, 'F811', "redefinition of unused 'foo' from line 1"),
     )
@@ -388,24 +392,21 @@ def test_redefinition_of_unused_name_block_def():
         '#block foo\n'
         '#end block\n'
         '#def foo()\n'
-        '#end def\n'
+        '#end def\n',
     ) == (
         (3, 'F811', "redefinition of unused 'foo' from line 1"),
     )
 
 
 def test_list_comprehension_redefines_name():
-    # python 3 makes this not an issue
     expected = (
         ((1, 'F841', "local variable 'foo' is assigned to but never used"),)
-        if five.PY3 else
-        ((2, 'F812', "list comprehension redefines 'foo' from line 1"),)
     )
     assert get_flakes(
         '#py foo = $bar\n'
         '#for bar in [foo for foo in (1, 2, 3)]\n'
         '    $bar\n'
-        '#end for\n'
+        '#end for\n',
     ) == expected
 
 
@@ -470,7 +471,7 @@ def test_context_manager():
         '    before\n'
         '    #yield\n'
         '    after\n'
-        '#end def\n'
+        '#end def\n',
     ) == ()
 
 
@@ -478,12 +479,12 @@ def test_cannot_determine_line_number():
     assert get_flakes(
         '$foo(\n'
         '    $bar == True,\n'
-        ')'
+        ')',
     ) == (
         (
             0,
             'E712',
-            "comparison to True should be 'if cond is True:' or 'if cond:'"
+            "comparison to True should be 'if cond is True:' or 'if cond:'",
         ),
     )
 
@@ -530,7 +531,7 @@ def test_indents_not_four_spaces():
     assert get_flakes(
         '#if True:\n'
         '   Hello world\n'
-        '#end if\n'
+        '#end if\n',
     ) == (
         (2, 'T004', 'Indentation is not a multiple of 4'),
     )
