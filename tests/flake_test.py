@@ -373,7 +373,12 @@ def test_duplicated_key_name():
 
 def test_compare_against_literal():
     assert get_flakes('#py x = 5\n${x is 5}') == (
-        (2, 'F632', 'use ==/!= to compare str, bytes, and int literals'),
+        (
+            2,
+            'F632',
+            'use ==/!= to compare constant literals (str, bytes, int, float, '
+            'tuple)',
+        ),
     )
 
 
