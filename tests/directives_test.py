@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from refactorlib.cheetah.parse import parse
 
 from cheetah_lint.directives import get_compiler_settings_directive

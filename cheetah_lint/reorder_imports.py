@@ -1,9 +1,9 @@
+from __future__ import annotations
+
 import argparse
 import sys
 from typing import Callable
-from typing import Optional
 from typing import Sequence
-from typing import Set
 
 import lxml.etree
 from aspy.refactor_imports.import_obj import AbstractImportObj
@@ -32,7 +32,7 @@ def separate_comma_imports(xmldoc: lxml.etree.Element) -> str:
 
 
 def remove_duplicated_imports(xmldoc: lxml.etree.Element) -> str:
-    previously_seen_imports: Set[AbstractImportObj] = set()
+    previously_seen_imports: set[AbstractImportObj] = set()
     for import_obj in get_all_imports(xmldoc):
         if import_obj.import_obj in previously_seen_imports:
             import_obj.directive_element.remove_self()
@@ -129,7 +129,7 @@ STEPS = [
 ]
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     argv = argv or sys.argv[1:]
     parser = argparse.ArgumentParser()
     parser.add_argument('filenames', nargs='*')
