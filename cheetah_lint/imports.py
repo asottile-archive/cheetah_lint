@@ -1,4 +1,4 @@
-from typing import Type
+from __future__ import annotations
 
 import lxml.etree
 from aspy.refactor_imports.import_obj import AbstractImportObj
@@ -13,7 +13,7 @@ def combine_import_objs(import_objs: AbstractImportObj) -> str:
 
 class CheetahImport:
     IMPORT_NAME: str
-    IMPORT_TYPE: Type[AbstractImportObj]
+    IMPORT_TYPE: type[AbstractImportObj]
 
     def __init__(self, directive_element: lxml.etree.Element) -> None:
         self.directive_element = directive_element

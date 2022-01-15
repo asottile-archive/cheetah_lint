@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import enum
 import re
@@ -6,7 +8,6 @@ import sys
 import tempfile
 import tokenize
 from typing import Callable
-from typing import Optional
 from typing import Sequence
 from typing import Tuple
 
@@ -82,7 +83,7 @@ def to_py(src: str) -> str:
     return compile_source(src, compiler_cls=NoCompilerSettingsCompiler)
 
 
-def filter_known_errors(data: Sequence[LintCode]) -> Tuple[LintCode, ...]:
+def filter_known_errors(data: Sequence[LintCode]) -> tuple[LintCode, ...]:
     return tuple(
         (line, code, msg)
         for line, code, msg in data
@@ -121,7 +122,7 @@ def _find_bounds(
         py_line_no: int,
         py_by_line_no: Sequence[str],
         cheetah_by_line_no: Sequence[str],
-) -> Tuple[int, int]:
+) -> tuple[int, int]:
     """Searches before and after in the python source to find comments which
     denote cheetah line numbers.  If a lower bound is not found, 0 is
     substituted.  If an upper bound is not found, len(cheetah lines) is
@@ -195,7 +196,7 @@ def _get_line_no(
         py_line_no: int,
         py_by_line_no: Sequence[str],
         cheetah_by_line_no: Sequence[str],
-        hint: Optional[LineNoHint] = None,
+        hint: LineNoHint | None = None,
 ) -> int:
     # Attempt to find it by the cheetah compiler comments
     ret = _get_line_no_from_comments(py_by_line_no[py_line_no])
@@ -243,7 +244,7 @@ def _normalize_line(
         msg: str,
         py_by_line_no: Sequence[str],
         cheetah_by_line_no: Sequence[str],
-) -> Tuple[int, str, str]:
+) -> tuple[int, str, str]:
     msg = _normalize_msg_line_no(msg, code, py_by_line_no, cheetah_by_line_no)
     line_no = _get_line_no(
         line_no, py_by_line_no, cheetah_by_line_no, LineNoHint.LAST_IMPORT,
@@ -255,7 +256,7 @@ def normalize_lines(
         data: Sequence[LintCode],
         py_lines: Sequence[str],
         cheetah_lines: Sequence[str],
-) -> Tuple[LintCode, ...]:
+) -> tuple[LintCode, ...]:
     # Let's not think about the difference between index and line number
     py_by_line_no = ('',) + tuple(py_lines)
     cheetah_by_line_no = ('',) + tuple(cheetah_lines)
@@ -265,7 +266,7 @@ def normalize_lines(
     )
 
 
-def check_flake8(py_lines: Sequence[str]) -> Tuple[LintCode, ...]:
+def check_flake8(py_lines: Sequence[str]) -> tuple[LintCode, ...]:
     with tempfile.NamedTemporaryFile(suffix='.py') as tmpfile:
         tmpfile.write(''.join(py_lines).encode('UTF-8'))
         tmpfile.flush()
@@ -294,8 +295,8 @@ def to_readline(py_lines: Sequence[str]) -> Callable[[], str]:
     return readline
 
 
-def check_unicode_literals(py_lines: Sequence[str]) -> Tuple[LintCode, ...]:
-    data: Tuple[LintCode, ...] = ()
+def check_unicode_literals(py_lines: Sequence[str]) -> tuple[LintCode, ...]:
+    data: tuple[LintCode, ...] = ()
     readline = to_readline(py_lines)
 
     for token_type, token_s, start, _, _ in tokenize.generate_tokens(readline):
@@ -317,8 +318,8 @@ PY_CHECKS = (
 )
 
 
-def get_from_py(file_contents: str) -> Tuple[LintCode, ...]:
-    data: Tuple[LintCode, ...] = ()
+def get_from_py(file_contents: str) -> tuple[LintCode, ...]:
+    data: tuple[LintCode, ...] = ()
     cheetah_lines = file_contents.splitlines(True)
     py_source = to_py(file_contents)
     py_lines = py_source.splitlines(True)
@@ -329,7 +330,7 @@ def get_from_py(file_contents: str) -> Tuple[LintCode, ...]:
 
 def check_implements(
         cheetah_by_line_no: Sequence[str],
-) -> Tuple[LintCode, ...]:
+) -> tuple[LintCode, ...]:
     extends = None
     implements = None
     for line_no, line in enumerate(cheetah_by_line_no):
@@ -355,7 +356,7 @@ def check_implements(
 
 def check_extends_cheetah_template(
         cheetah_by_line_no: Sequence[str],
-) -> Tuple[LintCode, ...]:
+) -> tuple[LintCode, ...]:
     for line_no, line in enumerate(cheetah_by_line_no):
         if line.strip() == '#extends Cheetah.Template':
             return (
@@ -374,7 +375,7 @@ LEADING_WHITESPACE = re.compile('^[ \t]+')
 
 def check_indentation(
         cheetah_by_line_no: Sequence[str],
-) -> Tuple[LintCode, ...]:
+) -> tuple[LintCode, ...]:
     errors = []
     for line_no, line in enumerate(cheetah_by_line_no):
         ws = getattr(LEADING_WHITESPACE.match(line), 'group', lambda: '')()
@@ -387,7 +388,7 @@ def check_indentation(
     return tuple(errors)
 
 
-def check_empty(cheetah_by_line_no: Sequence[str]) -> Tuple[LintCode, ...]:
+def check_empty(cheetah_by_line_no: Sequence[str]) -> tuple[LintCode, ...]:
     if not ''.join(cheetah_by_line_no).strip():
         return ((1, 'T005', 'File is empty'),)
     else:
@@ -402,15 +403,15 @@ LINE_CHECKS = (
 )
 
 
-def get_from_lines(file_contents: str) -> Tuple[LintCode, ...]:
+def get_from_lines(file_contents: str) -> tuple[LintCode, ...]:
     cheetah_by_line_no = ('',) + tuple(file_contents.splitlines(True))
-    data: Tuple[LintCode, ...] = ()
+    data: tuple[LintCode, ...] = ()
     for check in LINE_CHECKS:
         data += check(cheetah_by_line_no)
     return data
 
 
-def get_flakes(file_contents: str) -> Tuple[LintCode, ...]:
+def get_flakes(file_contents: str) -> tuple[LintCode, ...]:
     data = (*get_from_py(file_contents), *get_from_lines(file_contents))
     return tuple(sorted(data))
 
@@ -423,7 +424,7 @@ def flake(filename: str) -> int:
     return int(bool(flakes))
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('filenames', nargs='*', help='Filenames to flake.')
     args = parser.parse_args(argv)

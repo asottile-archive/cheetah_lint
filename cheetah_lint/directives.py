@@ -1,7 +1,6 @@
+from __future__ import annotations
+
 import functools
-from typing import List
-from typing import Optional
-from typing import Type
 from typing import TypeVar
 
 import lxml.etree
@@ -16,7 +15,7 @@ T = TypeVar('T', bound=CheetahImport)
 
 def get_compiler_settings_directive(
         xmldoc: lxml.etree.Element,
-) -> Optional[lxml.etree.Element]:
+) -> lxml.etree.Element | None:
     try:
         return xmldoc.xpath_one('./compiler-settings')
     except ExactlyOneError:
@@ -26,7 +25,7 @@ def get_compiler_settings_directive(
 def _get_special_directive(
         xmldoc: lxml.etree.Element,
         directive: str,
-) -> Optional[lxml.etree.Element]:
+) -> lxml.etree.Element | None:
     try:
         return xmldoc.xpath_one(
             f'./Directive[starts-with(., "{directive}")]',
@@ -45,8 +44,8 @@ get_implements_directive = functools.partial(
 
 def _get_import_helper(
         xmldoc: lxml.etree.Element,
-        directive_cls: Type[T],
-) -> List[T]:
+        directive_cls: type[T],
+) -> list[T]:
     xml_elements = xmldoc.xpath(
         './Directive['
         '    SimpleExprDirective/UnbracedExpression/Py[1]['
@@ -59,15 +58,15 @@ def _get_import_helper(
     return [directive_cls(xml_element) for xml_element in xml_elements]
 
 
-def get_from_imports(xmldoc: lxml.etree.Element) -> List[CheetahFromImport]:
+def get_from_imports(xmldoc: lxml.etree.Element) -> list[CheetahFromImport]:
     return _get_import_helper(xmldoc, CheetahFromImport)
 
 
 def get_import_imports(
         xmldoc: lxml.etree.Element,
-) -> List[CheetahImportImport]:
+) -> list[CheetahImportImport]:
     return _get_import_helper(xmldoc, CheetahImportImport)
 
 
-def get_all_imports(xmldoc: lxml.etree.Element) -> List[CheetahImport]:
+def get_all_imports(xmldoc: lxml.etree.Element) -> list[CheetahImport]:
     return [*get_import_imports(xmldoc), *get_from_imports(xmldoc)]
