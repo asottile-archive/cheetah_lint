@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from typing import Callable
 from typing import Sequence
 
@@ -130,7 +129,6 @@ STEPS = [
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    argv = argv or sys.argv[1:]
     parser = argparse.ArgumentParser()
     parser.add_argument('filenames', nargs='*')
     args = parser.parse_args(argv)
