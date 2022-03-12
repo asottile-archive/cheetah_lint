@@ -458,7 +458,8 @@ def test_has_key():
 
 
 def test_invalid_escape_sequence():
-    with pytest.warns(None):  # in py3 the compilation of this causes a warning
+    # in py3 the compilation of this causes a warning
+    with pytest.warns(DeprecationWarning):
         assert get_flakes(r'${"\q"}') == (
             (1, 'W605', r"invalid escape sequence '\q'"),
         )
