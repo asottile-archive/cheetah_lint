@@ -1,6 +1,6 @@
-[![Build Status](https://dev.azure.com/asottile/asottile/_apis/build/status/asottile.cheetah_lint?branchName=master)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=41&branchName=master)
-[![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/asottile/asottile/41/master.svg)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=41&branchName=master)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/asottile/cheetah_lint/master.svg)](https://results.pre-commit.ci/latest/github/asottile/cheetah_lint/master)
+[![Build Status](https://dev.azure.com/asottile/asottile/_apis/build/status/asottile.cheetah_lint?branchName=main)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=41&branchName=main)
+[![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/asottile/asottile/41/main.svg)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=41&branchName=main)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/asottile/cheetah_lint/main.svg)](https://results.pre-commit.ci/latest/github/asottile/cheetah_lint/main)
 
 cheetah_lint
 ============
