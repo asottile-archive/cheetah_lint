@@ -467,7 +467,7 @@ def test_invalid_escape_sequence():
 
 def test_syntaxerror():
     assert get_flakes('#if foo = "bar": herp') == (
-        (1, 'E999', "SyntaxError: invalid syntax"),
+        (1, 'E999', 'SyntaxError: invalid syntax'),
     )
 
 
