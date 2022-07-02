@@ -12,9 +12,6 @@ def combine_import_objs(import_objs: Import | ImportFrom) -> str:
 
 
 class CheetahImport:
-    IMPORT_NAME: str
-    IMPORT_TYPE: type[Import] | type[ImportFrom]
-
     def __init__(self, directive_element: lxml.etree.Element) -> None:
         self.directive_element = directive_element
 
@@ -30,13 +27,3 @@ class CheetahImport:
         ret = lxml.etree.Element('Imports')
         ret.text = combine_import_objs(self.import_obj.split())
         return ret
-
-
-class CheetahFromImport(CheetahImport):
-    IMPORT_NAME = 'from'
-    IMPORT_TYPE = Import
-
-
-class CheetahImportImport(CheetahImport):
-    IMPORT_NAME = 'import'
-    IMPORT_TYPE = Import
