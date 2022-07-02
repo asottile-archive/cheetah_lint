@@ -5,8 +5,9 @@ from typing import Callable
 from typing import Sequence
 
 import lxml.etree
-from aspy.refactor_imports.import_obj import AbstractImportObj
-from aspy.refactor_imports.sort import sort
+from classify_imports import Import
+from classify_imports import ImportFrom
+from classify_imports import sort
 from refactorlib.cheetah.parse import parse
 from refactorlib.node import ExactlyOneError
 
@@ -22,7 +23,7 @@ def separate_comma_imports(xmldoc: lxml.etree.Element) -> str:
     imports = get_all_imports(xmldoc)
 
     for import_obj in imports:
-        if import_obj.import_obj.has_multiple_imports:
+        if import_obj.import_obj.is_multiple:
             import_obj.directive_element.replace_self(
                 import_obj.get_new_import_statements(),
             )
@@ -31,7 +32,7 @@ def separate_comma_imports(xmldoc: lxml.etree.Element) -> str:
 
 
 def remove_duplicated_imports(xmldoc: lxml.etree.Element) -> str:
-    previously_seen_imports: set[AbstractImportObj] = set()
+    previously_seen_imports: set[Import | ImportFrom] = set()
     for import_obj in get_all_imports(xmldoc):
         if import_obj.import_obj in previously_seen_imports:
             import_obj.directive_element.remove_self()

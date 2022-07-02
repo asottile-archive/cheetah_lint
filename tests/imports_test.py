@@ -16,12 +16,12 @@ def from_import_from_string(s):
 
 def test_not_has_multiple_imports():
     import_obj = from_import_from_string('#from foo import bar')
-    assert import_obj.import_obj.has_multiple_imports is False
+    assert import_obj.import_obj.is_multiple is False
 
 
 def test_has_multiple_imports():
     import_obj = from_import_from_string('#from foo import bar, baz')
-    assert import_obj.import_obj.has_multiple_imports is True
+    assert import_obj.import_obj.is_multiple is True
 
 
 def test_split_from_import():

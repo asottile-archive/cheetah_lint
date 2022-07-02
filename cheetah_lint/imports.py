@@ -1,42 +1,42 @@
 from __future__ import annotations
 
 import lxml.etree
-from aspy.refactor_imports.import_obj import AbstractImportObj
-from aspy.refactor_imports.import_obj import FromImport
-from aspy.refactor_imports.import_obj import ImportImport
 from cached_property import cached_property
+from classify_imports import Import
+from classify_imports import import_obj_from_str
+from classify_imports import ImportFrom
 
 
-def combine_import_objs(import_objs: AbstractImportObj) -> str:
-    return ''.join('#' + import_obj.to_text() for import_obj in import_objs)
+def combine_import_objs(import_objs: Import | ImportFrom) -> str:
+    return ''.join(f'#{import_obj}' for import_obj in import_objs)
 
 
 class CheetahImport:
     IMPORT_NAME: str
-    IMPORT_TYPE: type[AbstractImportObj]
+    IMPORT_TYPE: type[Import] | type[ImportFrom]
 
     def __init__(self, directive_element: lxml.etree.Element) -> None:
         self.directive_element = directive_element
 
     @cached_property
-    def import_obj(self) -> AbstractImportObj:
+    def import_obj(self) -> Import | ImportFrom:
         expr = self.directive_element.xpath_one(
             'descendant::UnbracedExpression',
         ).totext(encoding='unicode')
-        return self.IMPORT_TYPE.from_str(expr)
+        return import_obj_from_str(expr)
 
     def get_new_import_statements(self) -> lxml.etree.Element:
-        assert self.import_obj.has_multiple_imports
+        assert self.import_obj.is_multiple
         ret = lxml.etree.Element('Imports')
-        ret.text = combine_import_objs(self.import_obj.split_imports())
+        ret.text = combine_import_objs(self.import_obj.split())
         return ret
 
 
 class CheetahFromImport(CheetahImport):
     IMPORT_NAME = 'from'
-    IMPORT_TYPE = FromImport
+    IMPORT_TYPE = Import
 
 
 class CheetahImportImport(CheetahImport):
     IMPORT_NAME = 'import'
-    IMPORT_TYPE = ImportImport
+    IMPORT_TYPE = Import
