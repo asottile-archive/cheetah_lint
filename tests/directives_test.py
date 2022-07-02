@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from refactorlib.cheetah.parse import parse
 
+from cheetah_lint.directives import get_all_imports
 from cheetah_lint.directives import get_compiler_settings_directive
 from cheetah_lint.directives import get_extends_directive
-from cheetah_lint.directives import get_from_imports
 from cheetah_lint.directives import get_implements_directive
-from cheetah_lint.directives import get_import_imports
 
 
 def get_parsed_doc():
@@ -47,19 +46,12 @@ def test_get_implements_directive():
     assert ret.totext(encoding='unicode') == '#implements respond\n'
 
 
-def test_get_from_imports():
-    ret = get_from_imports(get_parsed_doc())
-    to_texts = [el.directive_element.totext(encoding='unicode') for el in ret]
-    assert to_texts == [
-        '#from foo.bar import baz\n',
-        '#from a import b as c\n',
-    ]
-
-
-def test_get_import_imports():
-    ret = get_import_imports(get_parsed_doc())
+def test_get_imports():
+    ret = get_all_imports(get_parsed_doc())
     to_texts = [el.directive_element.totext(encoding='unicode') for el in ret]
     assert to_texts == [
         '#import itertools\n',
         '#import yelp.util.helpers.template as h\n',
+        '#from foo.bar import baz\n',
+        '#from a import b as c\n',
     ]
