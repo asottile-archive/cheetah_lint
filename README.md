@@ -10,7 +10,9 @@ Linting tools for the [yelp_cheetah](https://github.com/Yelp/yelp_cheetah) templ
 
 ## Installation
 
-`pip install cheetah-lint`
+```bash
+pip install cheetah-lint
+```
 
 
 ## Console scripts
