@@ -66,8 +66,6 @@ SELECTED_ERRORS = ','.join((
     'E714',
     # SyntaxError
     'E999',
-    # .has_key() is deprecated, use 'in'
-    'W601',
     # invalid escape sequence
     'W605',
 ))
