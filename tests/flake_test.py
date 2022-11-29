@@ -451,12 +451,6 @@ def test_identity():
     )
 
 
-def test_has_key():
-    assert get_flakes('#if $foo.has_key($bar): herp') == (
-        (1, 'W601', ".has_key() is deprecated, use 'in'"),
-    )
-
-
 def test_invalid_escape_sequence():
     # in py3 the compilation of this causes a warning
     with pytest.warns(DeprecationWarning):
