@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from functools import cached_property
+
 import lxml.etree
-from cached_property import cached_property
 from classify_imports import Import
 from classify_imports import import_obj_from_str
 from classify_imports import ImportFrom
