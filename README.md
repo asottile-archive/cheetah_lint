@@ -1,3 +1,9 @@
+# ARCHIVED
+
+cheetah / yelp-cheetah are long since dead and I don't plan on updating it further
+
+___
+
 [![build status](https://github.com/asottile/cheetah_lint/actions/workflows/main.yml/badge.svg)](https://github.com/asottile/cheetah_lint/actions/workflows/main.yml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/asottile/cheetah_lint/main.svg)](https://results.pre-commit.ci/latest/github/asottile/cheetah_lint/main)
 
